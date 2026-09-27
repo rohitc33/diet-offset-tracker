@@ -709,6 +709,7 @@
     selectedYear = date.slice(0, 4);
     $("price").value = "";
     $("dish").value = "";
+    updatePreview(); // clearing .value doesn't fire "input", so reset the button's offset text here
     // Keep focus for quick repeat entry on desktop; on touch screens let the keyboard close.
     if (window.matchMedia && matchMedia("(pointer: coarse)").matches) document.activeElement.blur();
     else $("price").focus();
