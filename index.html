@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diet Offset Tracker</title>
+<meta name="description" content="Log meat purchases and track how much to donate to animal welfare causes to offset them.">
+<style>
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --surface-2: #efede7;
+    --text: #1d1f1c;
+    --muted: #666b63;
+    --border: #dddad2;
+    --accent: #2f7a4f;
+    --accent-ink: #ffffff;
+    --accent-soft: #e2f0e7;
+    --danger: #b3412f;
+    --bar: #6fae86;
+    --radius: 12px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #141614;
+      --surface: #1d201d;
+      --surface-2: #262a26;
+      --text: #e9ebe6;
+      --muted: #9da398;
+      --border: #333833;
+      --accent: #5fbf85;
+      --accent-ink: #0d1a12;
+      --accent-soft: #1f3528;
+      --danger: #e27b69;
+      --bar: #4f9a6c;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  h1 { font-size: 1.35rem; margin: 0; }
+  h2 { font-size: 1rem; margin: 0 0 12px; }
+  .muted { color: var(--muted); }
+  .small { font-size: 0.85rem; }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-top: 16px;
+  }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* Totals */
+  .totals { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+  .totals .label { font-size: 0.8rem; color: var(--muted); }
+  .totals .big { font-size: 2rem; font-weight: 700; line-height: 1.15; }
+  .totals .mid { font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
+  @media (max-width: 520px) {
+    .totals { grid-template-columns: 1fr 1fr; }
+    .totals > :first-child { grid-column: 1 / -1; }
+  }
+
+  /* Form */
+  form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  @media (max-width: 520px) { form .row { grid-template-columns: 1fr; } }
+  label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  input, select, button { font: inherit; color: inherit; }
+  input, select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+  }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .money { position: relative; }
+  .money span { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+  .money input { padding-left: 28px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: 100%; }
+  .seg button {
+    flex: 1; border: 0; background: var(--surface); padding: 10px 8px; cursor: pointer;
+  }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .preview { font-size: 0.95rem; }
+  .preview strong { color: var(--accent); }
+  .btn {
+    border: 1px solid var(--border); background: var(--surface); padding: 9px 14px; border-radius: 8px; cursor: pointer;
+  }
+  .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  .btn.danger { color: var(--danger); }
+  .btn.link { border: 0; background: none; padding: 4px 6px; color: var(--muted); }
+  .btn.link:hover { color: var(--danger); }
+
+  /* Lists */
+  ul.list { list-style: none; margin: 0; padding: 0; }
+  ul.list li {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
+    padding: 10px 0; border-top: 1px solid var(--border);
+  }
+  ul.list li:first-child { border-top: 0; }
+  .entry-title { font-weight: 600; }
+  .entry-meta { font-size: 0.85rem; color: var(--muted); }
+  .entry-amt { text-align: right; }
+  .entry-amt .owed { font-weight: 600; color: var(--accent); }
+  .empty { color: var(--muted); padding: 8px 0; margin: 0; }
+
+  /* Breakdown bars */
+  .bars { display: grid; gap: 8px; }
+  .bar-row { display: grid; grid-template-columns: 110px 1fr 80px; gap: 10px; align-items: center; font-size: 0.9rem; }
+  .bar-track { background: var(--surface-2); border-radius: 4px; height: 10px; overflow: hidden; }
+  .bar-fill { background: var(--bar); height: 100%; border-radius: 4px; }
+
+  details summary { cursor: pointer; font-weight: 600; }
+  details[open] summary { margin-bottom: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th, td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--muted); font-weight: 500; border-top: 0; }
+  td input { padding: 6px 8px; width: 80px; }
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
+  @media (max-width: 520px) { .settings-grid { grid-template-columns: 1fr; } }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+  .toast {
+    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 0.9rem;
+    opacity: 0; transition: opacity .2s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Diet Offset Tracker</h1>
+    <select id="yearSelect" aria-label="Year" style="width:auto"></select>
+  </header>
+
+  <section class="card" aria-label="Totals">
+    <div class="totals">
+      <div>
+        <div class="label">Offset owed in <span id="yearLabel"></span></div>
+        <div class="big num" id="totalOwed">$0.00</div>
+        <div class="small muted" id="totalMeta"></div>
+      </div>
+      <div>
+        <div class="label">Donated</div>
+        <div class="mid num" id="totalDonated">$0.00</div>
+      </div>
+      <div>
+        <div class="label" id="remainingLabel">Still to give</div>
+        <div class="mid num" id="totalRemaining">$0.00</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Log a meal</h2>
+    <form id="mealForm" autocomplete="off">
+      <div class="row">
+        <div>
+          <label for="meat">Meat</label>
+          <select id="meat" required></select>
+        </div>
+        <div>
+          <label for="price">What you paid</label>
+          <div class="money"><span class="cur"></span><input id="price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required></div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="dish">Dish (optional)</label>
+          <input id="dish" type="text" maxlength="80" placeholder="e.g. Chicken tikka masala">
+        </div>
+        <div>
+          <label for="date">Date</label>
+          <input id="date" type="date" required>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label id="contextLabel">Bought as</label>
+          <div class="seg" role="group" aria-labelledby="contextLabel">
+            <button type="button" data-context="restaurant">Restaurant dish</button>
+            <button type="button" data-context="grocery">Groceries</button>
+          </div>
+        </div>
+        <div class="small muted" id="contextHelp" style="align-self:end"></div>
+      </div>
+      <div class="actions">
+        <div class="preview" id="preview" aria-live="polite"></div>
+        <button class="btn primary" type="submit">Add</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Log a donation</h2>
+    <form id="donationForm" autocomplete="off">
+      <div class="row">
+        <div>
+          <label for="donAmount">Amount</label>
+          <div class="money"><span class="cur"></span><input id="donAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required></div>
+        </div>
+        <div>
+          <label for="donOrg">Organization (optional)</label>
+          <input id="donOrg" type="text" maxlength="80" placeholder="e.g. The Humane League">
+        </div>
+      </div>
+      <div class="actions">
+        <div>
+          <label for="donDate" class="hidden">Date</label>
+          <input id="donDate" type="date" required style="width:auto" aria-label="Donation date">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn" type="button" id="fillRemaining">Fill remaining</button>
+          <button class="btn primary" type="submit">Add donation</button>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="card" id="breakdownCard">
+    <h2>By meat</h2>
+    <div class="bars" id="bars"></div>
+  </section>
+
+  <section class="card">
+    <h2>Meals</h2>
+    <ul class="list" id="entries"></ul>
+  </section>
+
+  <section class="card">
+    <h2>Donations</h2>
+    <ul class="list" id="donations"></ul>
+  </section>
+
+  <section class="card">
+    <details>
+      <summary>How it's calculated &amp; settings</summary>
+      <p class="small">
+        Each meal's offset is the <em>welfare gap</em>: the extra you would have paid if the meat
+        had come from animals raised and slaughtered to high welfare standards
+        (e.g. slower-growing breeds, outdoor or pasture access, lower stocking densities, effective stunning).
+      </p>
+      <p class="small num"><strong>offset = price paid × meat share × (humane multiplier − 1)</strong></p>
+      <p class="small muted">
+        <em>Meat share</em> is roughly how much of the price was the meat itself. A restaurant plate's price mostly covers
+        labour, rent and sides; a grocery purchase is nearly all meat. <em>Humane multiplier</em> is roughly how many times more
+        the high-welfare version costs than typical conventional meat. The defaults below are rough estimates
+        based on typical US retail price gaps between conventional and pasture-raised / higher-welfare-certified products.
+        Adjust them to match your own prices. Changes apply to new entries only; logged meals keep the numbers they were logged with.
+      </p>
+
+      <div class="settings-grid">
+        <div>
+          <label for="shareRestaurant">Meat share, restaurant (%)</label>
+          <input id="shareRestaurant" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="shareGrocery">Meat share, groceries (%)</label>
+          <input id="shareGrocery" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="currency">Currency symbol</label>
+          <input id="currency" type="text" maxlength="3">
+        </div>
+      </div>
+
+      <table>
+        <thead><tr><th>Meat</th><th>Humane multiplier</th><th class="small">Basis</th></tr></thead>
+        <tbody id="multTable"></tbody>
+      </table>
+
+      <div class="toolbar">
+        <button class="btn" type="button" id="resetSettings">Reset to defaults</button>
+        <button class="btn" type="button" id="exportBtn">Export backup</button>
+        <button class="btn" type="button" id="importBtn">Import backup</button>
+        <input type="file" id="importFile" accept="application/json,.json" class="hidden">
+        <button class="btn danger" type="button" id="clearBtn">Delete all data</button>
+      </div>
+      <p class="small muted">Everything is stored only in this browser's localStorage. Export a backup now and then.</p>
+    </details>
+  </section>
+</main>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var STORAGE_KEY = "dietOffsetTracker.v1";
+
+  // multiplier = high-welfare price / conventional price (rough US retail estimates).
+  var DEFAULT_MEATS = [
+    { key: "chicken", label: "Chicken", multiplier: 3.5, basis: "Fast-growing confined broilers vs. slower-growing breeds with outdoor access" },
+    { key: "turkey",  label: "Turkey",  multiplier: 3.0, basis: "Industrial vs. pasture-raised / heritage birds" },
+    { key: "duck",    label: "Duck",    multiplier: 2.5, basis: "Indoor-raised vs. outdoor access with water to bathe in" },
+    { key: "eggs",    label: "Eggs",    multiplier: 2.5, basis: "Caged vs. certified pasture-raised hens" },
+    { key: "pork",    label: "Pork",    multiplier: 2.75, basis: "Gestation-crate confinement vs. pasture-raised pigs" },
+    { key: "veal",    label: "Veal",    multiplier: 2.5, basis: "Confined calves vs. group-housed / pasture-raised" },
+    { key: "beef",    label: "Beef",    multiplier: 1.6, basis: "Feedlot-finished vs. grass-fed, pasture-finished" },
+    { key: "lamb",    label: "Lamb",    multiplier: 1.3, basis: "Already mostly pasture-raised; smaller gap" },
+    { key: "goat",    label: "Goat",    multiplier: 1.3, basis: "Already mostly pasture-raised; smaller gap" },
+    { key: "fish_farmed", label: "Farmed fish", multiplier: 2.0, basis: "High-density farms vs. lower density with humane stunning" },
+    { key: "fish_wild",   label: "Wild-caught fish", multiplier: 1.4, basis: "Bycatch and slow death vs. line-caught with fast slaughter" },
+    { key: "shrimp",  label: "Shrimp / shellfish", multiplier: 2.5, basis: "Intensive ponds vs. lower-density farms with electrical stunning" },
+    { key: "other",   label: "Other / mixed", multiplier: 2.0, basis: "Generic middle estimate" }
+  ];
+  var DEFAULT_SETTINGS = {
+    currency: "$",
+    shares: { restaurant: 35, grocery: 100 },
+    lastContext: "restaurant",
+    lastMeat: "chicken",
+    meats: DEFAULT_MEATS
+  };
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function load() {
+    var data = null;
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { data = null; }
+    return normalize(data);
+  }
+
+  function normalize(data) {
+    if (!data || typeof data !== "object") data = {};
+    var s = Object.assign(clone(DEFAULT_SETTINGS), data.settings || {});
+    s.shares = Object.assign(clone(DEFAULT_SETTINGS.shares), (data.settings && data.settings.shares) || {});
+    // Keep saved multipliers, but pick up any meat types added in newer versions.
+    var saved = Array.isArray(s.meats) ? s.meats : [];
+    s.meats = DEFAULT_MEATS.map(function (d) {
+      var m = saved.find(function (x) { return x && x.key === d.key; });
+      return Object.assign(clone(d), m ? { multiplier: Number(m.multiplier) || d.multiplier } : {});
+    });
+    return {
+      entries: Array.isArray(data.entries) ? data.entries : [],
+      donations: Array.isArray(data.donations) ? data.donations : [],
+      settings: s
+    };
+  }
+
+  var state = load();
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {
+      toast("Couldn't save — browser storage is unavailable or full.");
+    }
+  }
+
+  // ---------- helpers ----------
+  var $ = function (id) { return document.getElementById(id); };
+
+  function todayStr() {
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function money(n) {
+    var neg = n < 0;
+    var s = Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return (neg ? "−" : "") + state.settings.currency + s;
+  }
+  function fmtDate(s) {
+    var p = s.split("-");
+    var d = new Date(+p[0], +p[1] - 1, +p[2]);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function meatByKey(k) { return state.settings.meats.find(function (m) { return m.key === k; }); }
+  function meatLabel(e) { var m = meatByKey(e.meat); return m ? m.label : (e.meatLabel || e.meat); }
+  function el(tag, attrs, children) {
+    var n = document.createElement(tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) {
+      if (k === "text") n.textContent = attrs[k];
+      else if (k === "class") n.className = attrs[k];
+      else n.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (c) { if (c) n.appendChild(c); });
+    return n;
+  }
+
+  var toastTimer;
+  function toast(msg) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
+  }
+
+  function computeOffset(price, meatKey, context) {
+    var m = meatByKey(meatKey);
+    var mult = m ? m.multiplier : 2;
+    var share = (state.settings.shares[context] || 100) / 100;
+    return { multiplier: mult, share: share, offset: round2(price * share * Math.max(0, mult - 1)) };
+  }
+
+  // ---------- year selection ----------
+  var selectedYear = todayStr().slice(0, 4);
+
+  function renderYears() {
+    var years = {};
+    years[todayStr().slice(0, 4)] = true;
+    state.entries.forEach(function (e) { years[e.date.slice(0, 4)] = true; });
+    state.donations.forEach(function (d) { years[d.date.slice(0, 4)] = true; });
+    var list = Object.keys(years).sort().reverse();
+    if (list.indexOf(selectedYear) === -1) selectedYear = list[0];
+    var sel = $("yearSelect");
+    sel.innerHTML = "";
+    list.forEach(function (y) { sel.appendChild(el("option", { value: y, text: y })); });
+    sel.value = selectedYear;
+  }
+
+  // ---------- form ----------
+  var context = state.settings.lastContext;
+
+  function renderForm() {
+    var sel = $("meat");
+    var current = sel.value || state.settings.lastMeat;
+    sel.innerHTML = "";
+    state.settings.meats.forEach(function (m) {
+      sel.appendChild(el("option", { value: m.key, text: m.label }));
+    });
+    sel.value = meatByKey(current) ? current : state.settings.meats[0].key;
+
+    document.querySelectorAll(".seg button").forEach(function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.context === context));
+    });
+    $("contextHelp").textContent = "Assumes meat is ~" + state.settings.shares[context] + "% of the price (editable in settings).";
+    document.querySelectorAll(".cur").forEach(function (c) { c.textContent = state.settings.currency; });
+    updatePreview();
+  }
+
+  function updatePreview() {
+    var price = parseFloat($("price").value);
+    var p = $("preview");
+    if (!(price > 0)) { p.textContent = ""; return; }
+    var r = computeOffset(price, $("meat").value, context);
+    p.innerHTML = "";
+    p.appendChild(document.createTextNode("Offset: "));
+    p.appendChild(el("strong", { class: "num", text: money(r.offset) }));
+    p.appendChild(el("span", { class: "muted small", text: "  (humane ≈ " + r.multiplier + "× the meat cost)" }));
+  }
+
+  $("price").addEventListener("input", updatePreview);
+  $("meat").addEventListener("change", updatePreview);
+  document.querySelectorAll(".seg button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      context = b.dataset.context;
+      renderForm();
+    });
+  });
+
+  $("mealForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var price = parseFloat($("price").value);
+    var date = $("date").value;
+    if (!(price > 0) || !date) return;
+    var meat = $("meat").value;
+    var r = computeOffset(price, meat, context);
+    state.entries.push({
+      id: uid(),
+      date: date,
+      meat: meat,
+      meatLabel: meatByKey(meat).label,
+      dish: $("dish").value.trim(),
+      price: round2(price),
+      context: context,
+      multiplier: r.multiplier,
+      share: r.share,
+      offset: r.offset,
+      createdAt: Date.now()
+    });
+    state.settings.lastMeat = meat;
+    state.settings.lastContext = context;
+    save();
+    selectedYear = date.slice(0, 4);
+    $("price").value = "";
+    $("dish").value = "";
+    $("price").focus();
+    toast("Logged " + money(r.offset) + " to offset");
+    render();
+  });
+
+  // ---------- donations ----------
+  $("donationForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var amt = parseFloat($("donAmount").value);
+    var date = $("donDate").value;
+    if (!(amt > 0) || !date) return;
+    state.donations.push({ id: uid(), date: date, amount: round2(amt), org: $("donOrg").value.trim(), createdAt: Date.now() });
+    save();
+    selectedYear = date.slice(0, 4);
+    $("donAmount").value = "";
+    $("donOrg").value = "";
+    toast("Donation recorded");
+    render();
+  });
+
+  $("fillRemaining").addEventListener("click", function () {
+    var t = yearTotals();
+    $("donAmount").value = t.remaining > 0 ? t.remaining.toFixed(2) : "";
+    $("donAmount").focus();
+  });
+
+  // ---------- rendering ----------
+  function inYear(x) { return x.date.slice(0, 4) === selectedYear; }
+  function byDateDesc(a, b) { return b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0); }
+
+  function yearTotals() {
+    var entries = state.entries.filter(inYear);
+    var owed = round2(entries.reduce(function (s, e) { return s + e.offset; }, 0));
+    var spent = round2(entries.reduce(function (s, e) { return s + e.price; }, 0));
+    var donated = round2(state.donations.filter(inYear).reduce(function (s, d) { return s + d.amount; }, 0));
+    return { entries: entries, owed: owed, spent: spent, donated: donated, remaining: round2(owed - donated) };
+  }
+
+  function render() {
+    renderYears();
+    var t = yearTotals();
+    $("yearLabel").textContent = selectedYear;
+    $("totalOwed").textContent = money(t.owed);
+    $("totalMeta").textContent = t.entries.length
+      ? t.entries.length + " meal" + (t.entries.length === 1 ? "" : "s") + " · " + money(t.spent) + " spent on meat dishes"
+      : "No meals logged yet";
+    $("totalDonated").textContent = money(t.donated);
+    if (t.remaining >= 0) {
+      $("remainingLabel").textContent = "Still to give";
+      $("totalRemaining").textContent = money(t.remaining);
+    } else {
+      $("remainingLabel").textContent = "Given beyond offset";
+      $("totalRemaining").textContent = money(-t.remaining);
+    }
+
+    // breakdown
+    var sums = {};
+    t.entries.forEach(function (e) { sums[e.meat] = (sums[e.meat] || 0) + e.offset; });
+    var keys = Object.keys(sums).sort(function (a, b) { return sums[b] - sums[a]; });
+    var max = keys.length ? sums[keys[0]] : 0;
+    var bars = $("bars");
+    bars.innerHTML = "";
+    $("breakdownCard").classList.toggle("hidden", keys.length === 0);
+    keys.forEach(function (k) {
+      var m = meatByKey(k);
+      var pct = max > 0 ? (sums[k] / max) * 100 : 0;
+      var fill = el("div", { class: "bar-fill" });
+      fill.style.width = Math.max(pct, 1) + "%";
+      bars.appendChild(el("div", { class: "bar-row" }, [
+        el("div", { text: m ? m.label : k }),
+        el("div", { class: "bar-track" }, [fill]),
+        el("div", { class: "num", style: "text-align:right", text: money(round2(sums[k])) })
+      ]));
+    });
+
+    // entries
+    var ul = $("entries");
+    ul.innerHTML = "";
+    var entries = t.entries.slice().sort(byDateDesc);
+    if (!entries.length) ul.appendChild(el("li", { class: "empty", text: "Nothing logged for " + selectedYear + "." }));
+    entries.forEach(function (e) {
+      var title = e.dish ? e.dish : meatLabel(e);
+      var meta = fmtDate(e.date) + " · " + (e.dish ? meatLabel(e) + " · " : "") +
+        (e.context === "grocery" ? "Groceries" : "Restaurant") + " · paid " + money(e.price);
+      var del = el("button", { class: "btn link", type: "button", "aria-label": "Delete " + title, title: "Delete", text: "✕" });
+      del.addEventListener("click", function () { removeItem("entries", e.id, "Meal"); });
+      ul.appendChild(el("li", null, [
+        el("div", null, [el("div", { class: "entry-title", text: title }), el("div", { class: "entry-meta", text: meta })]),
+        el("div", { class: "entry-amt" }, [
+          el("div", { class: "owed num", text: money(e.offset) }),
+          el("div", { class: "entry-meta num", text: e.multiplier + "× · " + Math.round(e.share * 100) + "% meat" })
+        ]),
+        del
+      ]));
+    });
+
+    // donations
+    var dl = $("donations");
+    dl.innerHTML = "";
+    var dons = state.donations.filter(inYear).sort(byDateDesc);
+    if (!dons.length) dl.appendChild(el("li", { class: "empty", text: "No donations recorded for " + selectedYear + "." }));
+    dons.forEach(function (d) {
+      var del = el("button", { class: "btn link", type: "button", "aria-label": "Delete donation", title: "Delete", text: "✕" });
+      del.addEventListener("click", function () { removeItem("donations", d.id, "Donation"); });
+      dl.appendChild(el("li", null, [
+        el("div", null, [el("div", { class: "entry-title", text: d.org || "Donation" }), el("div", { class: "entry-meta", text: fmtDate(d.date) })]),
+        el("div", { class: "entry-amt num", text: money(d.amount) }),
+        del
+      ]));
+    });
+  }
+
+  var lastRemoved = null;
+  function removeItem(listName, id, noun) {
+    var list = state[listName];
+    var idx = list.findIndex(function (x) { return x.id === id; });
+    if (idx === -1) return;
+    lastRemoved = { listName: listName, item: list[idx] };
+    list.splice(idx, 1);
+    save();
+    render();
+    showUndo(noun + " deleted");
+  }
+
+  function showUndo(msg) {
+    var t = $("toast");
+    t.textContent = msg + " — ";
+    var u = el("button", { class: "btn link", type: "button", style: "color:inherit;text-decoration:underline;padding:0", text: "Undo" });
+    u.addEventListener("click", function () {
+      if (!lastRemoved) return;
+      state[lastRemoved.listName].push(lastRemoved.item);
+      lastRemoved = null;
+      save();
+      render();
+      toast("Restored");
+    });
+    t.appendChild(u);
+    t.style.pointerEvents = "auto";
+    t.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); t.style.pointerEvents = "none"; }, 5000);
+  }
+
+  $("yearSelect").addEventListener("change", function () { selectedYear = this.value; render(); });
+
+  // ---------- settings ----------
+  function renderSettings() {
+    $("shareRestaurant").value = state.settings.shares.restaurant;
+    $("shareGrocery").value = state.settings.shares.grocery;
+    $("currency").value = state.settings.currency;
+    var tb = $("multTable");
+    tb.innerHTML = "";
+    state.settings.meats.forEach(function (m) {
+      var inp = el("input", { type: "number", min: "1", max: "20", step: "0.05", value: String(m.multiplier), "aria-label": m.label + " humane multiplier" });
+      inp.addEventListener("change", function () {
+        var v = parseFloat(inp.value);
+        if (!(v >= 1)) { inp.value = m.multiplier; return; }
+        m.multiplier = round2(v);
+        save();
+        renderForm();
+      });
+      tb.appendChild(el("tr", null, [
+        el("td", { text: m.label }),
+        el("td", null, [inp]),
+        el("td", { class: "small muted", text: m.basis })
+      ]));
+    });
+  }
+
+  function bindShare(id, key) {
+    $(id).addEventListener("change", function () {
+      var v = parseFloat(this.value);
+      if (!(v > 0 && v <= 100)) { this.value = state.settings.shares[key]; return; }
+      state.settings.shares[key] = Math.round(v);
+      save();
+      renderForm();
+    });
+  }
+  bindShare("shareRestaurant", "restaurant");
+  bindShare("shareGrocery", "grocery");
+
+  $("currency").addEventListener("change", function () {
+    state.settings.currency = this.value.trim() || "$";
+    this.value = state.settings.currency;
+    save();
+    renderForm();
+    render();
+  });
+
+  $("resetSettings").addEventListener("click", function () {
+    if (!confirm("Reset multipliers, meat shares and currency to defaults? Logged meals are not changed.")) return;
+    var keep = { lastContext: state.settings.lastContext, lastMeat: state.settings.lastMeat };
+    state.settings = Object.assign(clone(DEFAULT_SETTINGS), keep);
+    save();
+    renderSettings();
+    renderForm();
+    render();
+    toast("Settings reset");
+  });
+
+  $("exportBtn").addEventListener("click", function () {
+    var blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+    var a = el("a", { href: URL.createObjectURL(blob), download: "diet-offset-backup-" + todayStr() + ".json" });
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 0);
+  });
+
+  $("importBtn").addEventListener("click", function () { $("importFile").click(); });
+  $("importFile").addEventListener("change", function () {
+    var f = this.files && this.files[0];
+    this.value = "";
+    if (!f) return;
+    f.text().then(function (txt) {
+      var data = JSON.parse(txt);
+      if (!data || !Array.isArray(data.entries)) throw new Error("bad file");
+      if (!confirm("Replace all current data with this backup (" + data.entries.length + " meals)?")) return;
+      state = normalize(data);
+      context = state.settings.lastContext;
+      save();
+      renderSettings();
+      renderForm();
+      render();
+      toast("Backup imported");
+    }).catch(function () { toast("That file isn't a valid backup."); });
+  });
+
+  $("clearBtn").addEventListener("click", function () {
+    if (!confirm("Delete ALL meals, donations and settings from this browser? This can't be undone.")) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+    state = normalize(null);
+    context = state.settings.lastContext;
+    renderSettings();
+    renderForm();
+    render();
+    toast("All data deleted");
+  });
+
+  // ---------- init ----------
+  $("date").value = todayStr();
+  $("donDate").value = todayStr();
+  renderSettings();
+  renderForm();
+  render();
+})();
+</script>
+</body>
+</html>
