@@ -26,4 +26,5 @@ Changing settings only affects new entries. Logged meals keep the values they we
 - Record donations to see how much is still left to give ("Fill balance" pre-fills the balance)
 - Breakdown of the offset by meat type
 - Delete with undo, JSON export/import for backups
+- App-style layout with a bottom tab bar: **Log** (totals and the meal form, fits on one phone screen), **History** (by-meat breakdown and meals), **Donate** (log donations and see the balance), **Settings** (meat shares, multipliers with sources, method, backup)
 - Mobile-friendly: large tap targets, no zoom-on-focus on iOS, safe-area padding for notched phones, and it can be added to the home screen

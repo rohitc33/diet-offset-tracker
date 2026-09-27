@@ -51,18 +51,43 @@
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
   }
+  html, body { height: 100%; }
+  body { overflow: hidden; overscroll-behavior: none; }
+  .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+
+  /* Top bar */
+  .topbar {
+    flex: none; background: var(--bg); border-bottom: 1px solid var(--border);
+    padding: env(safe-area-inset-top) max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
+  }
+  .topbar-inner { max-width: 760px; margin: 0 auto; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  h1 { font-size: 1.2rem; margin: 0; }
+  #yearSelect { width: auto; min-height: 36px; padding: 4px 8px; }
+
+  /* Scrolling content */
   main {
-    max-width: 760px; margin: 0 auto;
-    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
-             calc(72px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+    flex: 1; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+    padding: 12px max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left));
   }
-  @media (max-width: 520px) {
-    main { padding-top: max(12px, env(safe-area-inset-top)); }
-    .card { padding: 14px; margin-top: 12px; }
+  .view { display: none; max-width: 760px; margin: 0 auto; }
+  .view.active { display: block; }
+  .view > .card:first-child, .view-intro + .card { margin-top: 0; }
+  .view-intro { margin: 0 0 10px; }
+
+  /* Bottom tab bar */
+  .tabbar {
+    flex: none; display: flex; justify-content: center;
+    background: var(--surface); border-top: 1px solid var(--border);
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
   }
-  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  h1 { font-size: 1.35rem; margin: 0; }
-  @media (max-width: 380px) { h1 { font-size: 1.15rem; } }
+  .tab {
+    flex: 1; max-width: 190px; min-height: 56px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+    color: var(--muted); text-decoration: none; font-size: 0.72rem; font-weight: 500; touch-action: manipulation;
+  }
+  .tab svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .tab[aria-current="page"] { color: var(--accent); }
+  .tab[aria-current="page"] svg { stroke-width: 2.4; }
+  body.typing .tabbar { display: none; }
   h2 { font-size: 1rem; margin: 0 0 12px; }
   .muted { color: var(--muted); }
   .small { font-size: 0.85rem; }
@@ -70,20 +95,17 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 16px;
-    margin-top: 16px;
+    padding: 14px;
+    margin-top: 12px;
   }
   .num { font-variant-numeric: tabular-nums; }
 
   /* Totals */
-  .totals { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 12px; }
+  .totals { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   .totals .label { font-size: 0.8rem; color: var(--muted); }
   .totals .big { font-size: 2rem; font-weight: 700; line-height: 1.15; }
-  .totals .mid { font-size: 1.25rem; font-weight: 600; line-height: 1.3; }
-  @media (max-width: 520px) {
-    .totals { grid-template-columns: 1fr 1fr; }
-    .totals > :first-child { grid-column: 1 / -1; }
-  }
+  .totals-side { text-align: right; font-size: 0.95rem; line-height: 1.6; }
+  .totals-side .strong { font-weight: 700; }
 
   /* Form */
   form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
@@ -91,9 +113,7 @@
   form .field { margin-bottom: 12px; }
   form .row > * { min-width: 0; }
   @media (max-width: 420px) { form .row.don-actions { grid-template-columns: 1fr; } }
-  @media (max-width: 380px) {
-    form .row.dish-date { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 360px) { #date { max-width: 150px; } }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
   input, select, button { font: inherit; color: inherit; touch-action: manipulation; }
   input, select {
@@ -116,13 +136,19 @@
   }
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  .actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .preview { font-size: 0.95rem; }
-  #contextHelp { margin: 6px 0 12px; }
-  @media (max-width: 520px) {
-    .actions .btn.primary.wide { width: 100%; min-height: 48px; font-size: 1.05rem; }
-    .actions { gap: 8px; }
+  #contextHelp { margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  #addMealBtn .amt { font-weight: 400; opacity: 0.9; }
+  /* Short screens (e.g. 320×568): drop non-essential lines so the Log screen still fits without scrolling */
+  @media (max-height: 640px) {
+    .totals .big { font-size: 1.5rem; }
+    .card { padding: 10px 12px; margin-top: 8px; }
+    main { padding-top: 8px; }
+    #contextLabel, #contextHelp { display: none; }
+    form .row, form .field { margin-bottom: 8px; }
+    label { margin-bottom: 2px; }
   }
+  .btn.primary.wide { width: 100%; min-height: 48px; font-size: 1.05rem; }
   .preview strong { color: var(--accent); }
   .btn {
     border: 1px solid var(--border); background: var(--surface); padding: 9px 14px; border-radius: 8px; cursor: pointer;
@@ -153,8 +179,6 @@
   .bar-fill { background: var(--bar); height: 100%; border-radius: 4px; }
   @media (max-width: 520px) { .bar-row { grid-template-columns: 96px 1fr 72px; gap: 8px; } }
 
-  details summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
-  details[open] summary { margin-bottom: 12px; }
   .meat-row { border-top: 1px solid var(--border); padding: 10px 0; }
   .meat-row p { margin: 6px 0; }
   .meat-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -169,7 +193,7 @@
   @media (max-width: 620px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
   .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
   .toast {
-    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    position: fixed; left: 50%; bottom: calc(68px + env(safe-area-inset-bottom)); transform: translateX(-50%);
     max-width: calc(100vw - 32px); text-align: center;
     background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 0.9rem;
     opacity: 0; transition: opacity .2s; pointer-events: none;
@@ -180,114 +204,140 @@
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <h1>Diet Offset Tracker</h1>
-    <select id="yearSelect" aria-label="Year" style="width:auto"></select>
+<div class="app">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <h1 id="viewTitle">Diet Offset</h1>
+      <select id="yearSelect" aria-label="Year"></select>
+    </div>
   </header>
 
-  <section class="card" aria-label="Totals">
-    <div class="totals">
-      <div>
-        <div class="label">Offset owed in <span id="yearLabel"></span></div>
-        <div class="big num" id="totalOwed">$0.00</div>
-        <div class="small muted" id="totalMeta"></div>
-      </div>
-      <div>
-        <div class="label">Donated</div>
-        <div class="mid num" id="totalDonated">$0.00</div>
-      </div>
-      <div>
-        <div class="label" id="remainingLabel">Still to give</div>
-        <div class="mid num" id="totalRemaining">$0.00</div>
-      </div>
-    </div>
-  </section>
-
-  <section class="card">
-    <h2>Log a meal</h2>
-    <form id="mealForm" autocomplete="off">
-      <div class="row">
+  <main id="scroller">
+    <section class="view" id="view-log" data-title="Diet Offset">
+      <div class="card totals" aria-label="Totals">
         <div>
-          <label for="meat">Meat</label>
-          <select id="meat" required></select>
+          <div class="label">Offset owed in <span id="yearLabel"></span></div>
+          <div class="big num" id="totalOwed">$0.00</div>
         </div>
-        <div>
-          <label for="price">What you paid</label>
-          <div class="money"><span class="cur"></span><input id="price" type="number" inputmode="decimal" enterkeyhint="done" min="0" step="0.01" placeholder="0.00" required></div>
-        </div>
-      </div>
-      <div class="field">
-        <label id="contextLabel">Bought at</label>
-        <div class="seg" role="group" aria-labelledby="contextLabel">
-          <button type="button" data-context="restaurant">Restaurant</button>
-          <button type="button" data-context="cafeteria">Cafeteria</button>
-          <button type="button" data-context="grocery">Groceries</button>
-        </div>
-        <div class="small muted" id="contextHelp"></div>
-      </div>
-      <div class="row dish-date">
-        <div>
-          <label for="dish">Dish (optional)</label>
-          <input id="dish" type="text" maxlength="80" enterkeyhint="done" placeholder="e.g. Chicken curry">
-        </div>
-        <div>
-          <label for="date">Date</label>
-          <input id="date" type="date" required>
+        <div class="totals-side">
+          <div><span class="label">Donated</span> <span class="num" id="totalDonated">$0.00</span></div>
+          <div><span class="label" id="remainingLabel">Still to give</span> <span class="num strong" id="totalRemaining">$0.00</span></div>
         </div>
       </div>
-      <div class="actions">
-        <div class="preview" id="preview" aria-live="polite"></div>
-        <button class="btn primary wide" type="submit">Add meal</button>
-      </div>
-    </form>
-  </section>
 
-
-
-  <section class="card">
-    <h2>Meals</h2>
-    <ul class="list" id="entries"></ul>
-  </section>
-
-  <section class="card">
-    <h2>Donations</h2>
-    <details id="donationDetails">
-      <summary>Log a donation</summary>
-    <form id="donationForm" autocomplete="off">
+      <div class="card">
+      <form id="mealForm" autocomplete="off">
         <div class="row">
           <div>
-            <label for="donAmount">Amount</label>
-            <div class="money"><span class="cur"></span><input id="donAmount" type="number" inputmode="decimal" enterkeyhint="done" min="0.01" step="0.01" placeholder="0.00" required></div>
+            <label for="meat">Meat</label>
+            <select id="meat" required></select>
           </div>
           <div>
-            <label for="donOrg">Charity (optional)</label>
-            <input id="donOrg" type="text" maxlength="80" placeholder="e.g. The Humane League">
+            <label for="price">What you paid</label>
+            <div class="money"><span class="cur"></span><input id="price" type="number" inputmode="decimal" enterkeyhint="done" min="0" step="0.01" placeholder="0.00" required></div>
           </div>
         </div>
-        <div class="row don-actions">
+        <div class="field">
+          <label id="contextLabel">Bought at</label>
+          <div class="seg" role="group" aria-labelledby="contextLabel">
+            <button type="button" data-context="restaurant">Restaurant</button>
+            <button type="button" data-context="cafeteria">Cafeteria</button>
+            <button type="button" data-context="grocery">Groceries</button>
+          </div>
+          <div class="small muted" id="contextHelp"></div>
+        </div>
+        <div class="row dish-date">
           <div>
-            <label for="donDate">Date</label>
-            <input id="donDate" type="date" required>
+            <label for="dish">Dish (optional)</label>
+            <input id="dish" type="text" maxlength="80" enterkeyhint="done" placeholder="e.g. Chicken curry">
           </div>
-          <div style="display:flex;gap:8px;align-items:stretch;align-self:end">
-            <button class="btn" type="button" id="fillRemaining" style="flex:1">Fill balance</button>
-            <button class="btn primary" type="submit" style="flex:1">Add</button>
+          <div>
+            <label for="date">Date</label>
+            <input id="date" type="date" required>
           </div>
         </div>
+        <div class="sr-only" id="preview" aria-live="polite"></div>
+        <button class="btn primary wide" type="submit" id="addMealBtn">Add meal</button>
       </form>
-    </details>
-    <ul class="list" id="donations"></ul>
-  </section>
+      </div>
+    </section>
 
-  <section class="card" id="breakdownCard">
-    <h2>By meat</h2>
-    <div class="bars" id="bars"></div>
-  </section>
+    <section class="view" id="view-history" data-title="History">
+      <p class="small muted view-intro" id="totalMeta"></p>
+      <div class="card" id="breakdownCard">
+        <h2>By meat</h2>
+        <div class="bars" id="bars"></div>
+      </div>
+      <div class="card">
+        <h2>Meals</h2>
+        <ul class="list" id="entries"></ul>
+      </div>
+    </section>
 
-  <section class="card">
-    <details>
-      <summary>How it's calculated &amp; settings</summary>
+    <section class="view" id="view-donate" data-title="Donate">
+      <p class="small muted view-intro" id="donBalance"></p>
+      <div class="card">
+        <h2>Log a donation</h2>
+      <form id="donationForm" autocomplete="off">
+          <div class="row">
+            <div>
+              <label for="donAmount">Amount</label>
+              <div class="money"><span class="cur"></span><input id="donAmount" type="number" inputmode="decimal" enterkeyhint="done" min="0.01" step="0.01" placeholder="0.00" required></div>
+            </div>
+            <div>
+              <label for="donOrg">Charity (optional)</label>
+              <input id="donOrg" type="text" maxlength="80" placeholder="e.g. The Humane League">
+            </div>
+          </div>
+          <div class="row don-actions">
+            <div>
+              <label for="donDate">Date</label>
+              <input id="donDate" type="date" required>
+            </div>
+            <div style="display:flex;gap:8px;align-items:stretch;align-self:end">
+              <button class="btn" type="button" id="fillRemaining" style="flex:1">Fill balance</button>
+              <button class="btn primary" type="submit" style="flex:1">Add</button>
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Donations</h2>
+        <ul class="list" id="donations"></ul>
+      </div>
+    </section>
+
+    <section class="view" id="view-settings" data-title="Settings">
+      <div class="card">
+        <h2>Meat share &amp; currency</h2>
+      <div class="settings-grid">
+        <div>
+          <label for="shareRestaurant">Meat share, restaurant (%)</label>
+          <input id="shareRestaurant" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="shareCafeteria">Meat share, cafeteria (%)</label>
+          <input id="shareCafeteria" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="shareGrocery">Meat share, groceries (%)</label>
+          <input id="shareGrocery" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="currency">Currency symbol</label>
+          <input id="currency" type="text" maxlength="3">
+        </div>
+      </div>
+      <p class="small muted" id="shareSource"></p>
+
+      </div>
+      <div class="card">
+      <h2>Humane multipliers</h2>
+      <div id="multList"></div>
+
+      </div>
+      <div class="card">
+        <h2>How it's calculated</h2>
       <p class="small">
         Each meal's offset is the <em>welfare gap</em>: the extra you would have paid if the meat
         had come from animals raised and slaughtered to high welfare standards
@@ -314,29 +364,9 @@
       </p>
       <p class="small muted">Edits apply to new entries only. Logged meals keep the numbers they were logged with.</p>
 
-      <div class="settings-grid">
-        <div>
-          <label for="shareRestaurant">Meat share, restaurant (%)</label>
-          <input id="shareRestaurant" type="number" min="1" max="100" step="1">
-        </div>
-        <div>
-          <label for="shareCafeteria">Meat share, cafeteria (%)</label>
-          <input id="shareCafeteria" type="number" min="1" max="100" step="1">
-        </div>
-        <div>
-          <label for="shareGrocery">Meat share, groceries (%)</label>
-          <input id="shareGrocery" type="number" min="1" max="100" step="1">
-        </div>
-        <div>
-          <label for="currency">Currency symbol</label>
-          <input id="currency" type="text" maxlength="3">
-        </div>
       </div>
-      <p class="small muted" id="shareSource"></p>
-
-      <h2 style="margin-top:20px">Humane multipliers</h2>
-      <div id="multList"></div>
-
+      <div class="card">
+        <h2>Data</h2>
       <div class="toolbar">
         <button class="btn" type="button" id="resetSettings">Reset to defaults</button>
         <button class="btn" type="button" id="exportBtn">Export backup</button>
@@ -345,9 +375,29 @@
         <button class="btn danger" type="button" id="clearBtn">Delete all data</button>
       </div>
       <p class="small muted">Everything is stored only in this browser's localStorage. Export a backup now and then.</p>
-    </details>
-  </section>
-</main>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Sections">
+    <a class="tab" href="#log" data-view="log">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      <span>Log</span>
+    </a>
+    <a class="tab" href="#history" data-view="history">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13"/><circle cx="3.5" cy="6" r="1"/><circle cx="3.5" cy="12" r="1"/><circle cx="3.5" cy="18" r="1"/></svg>
+      <span>History</span>
+    </a>
+    <a class="tab" href="#donate" data-view="donate">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/></svg>
+      <span>Donate</span>
+    </a>
+    <a class="tab" href="#settings" data-view="settings">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      <span>Settings</span>
+    </a>
+  </nav>
+</div>
 <div class="toast" id="toast" role="status"></div>
 
 <script>
@@ -425,9 +475,9 @@
     lamb: 1.3, goat: 1.3, fish_farmed: 2.0, fish_wild: 1.4, shrimp: 2.5, other: 2.0 };
   var SETTINGS_VERSION = 2;
   var CONTEXTS = {
-    restaurant: { label: "Restaurant", help: "Restaurant prices mostly cover labour and rent, so meat is counted as ~{n}% of the price." },
-    cafeteria:  { label: "Cafeteria",  help: "Subsidized cafeteria price ≈ ingredient cost, so meat is counted as ~{n}% of it." },
-    grocery:    { label: "Groceries",  help: "Groceries are nearly all meat, so it's counted as ~{n}% of the price." }
+    restaurant: { label: "Restaurant", help: "{n}% of price counted as meat" },
+    cafeteria:  { label: "Cafeteria",  help: "{n}% of price counted as meat" },
+    grocery:    { label: "Groceries",  help: "{n}% of price counted as meat" }
   };
   var DEFAULT_SETTINGS = {
     currency: "$",
@@ -559,20 +609,21 @@
       b.setAttribute("aria-pressed", String(b.dataset.context === context));
     });
     if (!CONTEXTS[context]) context = "restaurant";
-    $("contextHelp").textContent = CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) + " Editable in settings.";
     document.querySelectorAll(".cur").forEach(function (c) { c.textContent = state.settings.currency; });
     updatePreview();
   }
 
   function updatePreview() {
+    var m = meatByKey($("meat").value);
+    $("contextHelp").textContent = CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) +
+      (m ? " · humane ≈ " + m.multiplier + "×" : "");
     var price = parseFloat($("price").value);
-    var p = $("preview");
-    if (!(price > 0)) { p.textContent = ""; return; }
+    var btn = $("addMealBtn");
+    btn.textContent = "Add meal";
+    if (!(price > 0)) { $("preview").textContent = ""; return; }
     var r = computeOffset(price, $("meat").value, context);
-    p.innerHTML = "";
-    p.appendChild(document.createTextNode("Offset: "));
-    p.appendChild(el("strong", { class: "num", text: money(r.offset) }));
-    p.appendChild(el("span", { class: "muted small", text: "  (humane ≈ " + r.multiplier + "× the meat cost)" }));
+    btn.appendChild(el("span", { class: "amt num", text: " · " + money(r.offset) + " offset" }));
+    $("preview").textContent = "Offset " + money(r.offset);
   }
 
   $("price").addEventListener("input", updatePreview);
@@ -656,14 +707,16 @@
     $("yearLabel").textContent = selectedYear;
     $("totalOwed").textContent = money(t.owed);
     $("totalMeta").textContent = t.entries.length
-      ? t.entries.length + " meal" + (t.entries.length === 1 ? "" : "s") + " · " + money(t.spent) + " spent on meat dishes"
-      : "No meals logged yet";
+      ? t.entries.length + " meal" + (t.entries.length === 1 ? "" : "s") + " in " + selectedYear + " · " + money(t.spent) + " spent · " + money(t.owed) + " to offset"
+      : "No meals logged in " + selectedYear + " yet.";
+    $("donBalance").textContent = money(t.donated) + " donated of " + money(t.owed) + " owed in " + selectedYear + " · " +
+      (t.remaining >= 0 ? money(t.remaining) + " left to give" : money(-t.remaining) + " beyond the offset");
     $("totalDonated").textContent = money(t.donated);
     if (t.remaining >= 0) {
       $("remainingLabel").textContent = "Still to give";
       $("totalRemaining").textContent = money(t.remaining);
     } else {
-      $("remainingLabel").textContent = "Given beyond offset";
+      $("remainingLabel").textContent = "Over by";
       $("totalRemaining").textContent = money(-t.remaining);
     }
 
@@ -865,12 +918,43 @@
     toast("All data deleted");
   });
 
+  // ---------- navigation ----------
+  var VIEWS = ["log", "history", "donate", "settings"];
+  function showView() {
+    var v = location.hash.slice(1);
+    if (VIEWS.indexOf(v) === -1) v = "log";
+    VIEWS.forEach(function (k) { $("view-" + k).classList.toggle("active", k === v); });
+    document.querySelectorAll(".tab").forEach(function (t) {
+      if (t.dataset.view === v) t.setAttribute("aria-current", "page"); else t.removeAttribute("aria-current");
+    });
+    $("viewTitle").textContent = $("view-" + v).dataset.title;
+    $("yearSelect").classList.toggle("hidden", v === "settings");
+    $("scroller").scrollTop = 0;
+  }
+  document.querySelectorAll(".tab").forEach(function (t) {
+    t.addEventListener("click", function (ev) {
+      // Replace instead of push so the back button leaves the app rather than cycling tabs.
+      ev.preventDefault();
+      history.replaceState(null, "", "#" + t.dataset.view);
+      showView();
+    });
+  });
+  window.addEventListener("hashchange", showView);
+
+  // Hide the tab bar while typing on touch devices, where it would otherwise ride above the keyboard.
+  var coarse = window.matchMedia && matchMedia("(pointer: coarse)").matches;
+  document.addEventListener("focusin", function (e) {
+    if (coarse && e.target.matches("input[type=text], input[type=number]")) document.body.classList.add("typing");
+  });
+  document.addEventListener("focusout", function () { document.body.classList.remove("typing"); });
+
   // ---------- init ----------
   $("date").value = todayStr();
   $("donDate").value = todayStr();
   renderSettings();
   renderForm();
   render();
+  showView();
 })();
 </script>
 </body>
