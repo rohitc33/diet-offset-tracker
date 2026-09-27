@@ -109,11 +109,10 @@
 
   /* Form */
   form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  form .row.dish-date { grid-template-columns: 1fr auto; }
+  form .row.dish-date { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   form .field { margin-bottom: 12px; }
   form .row > * { min-width: 0; }
   @media (max-width: 420px) { form .row.don-actions { grid-template-columns: 1fr; } }
-  @media (max-width: 360px) { #date { max-width: 150px; } }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
   input, select, button { font: inherit; color: inherit; touch-action: manipulation; }
   input, select {
@@ -124,6 +123,12 @@
     border: 1px solid var(--border);
     border-radius: 8px;
     background: var(--surface);
+  }
+  /* iOS Safari gives date inputs an intrinsic min-width that ignores width:100% and overflows its column. */
+  input[type="date"] { min-width: 0; max-width: 100%; display: block; padding-left: 10px; padding-right: 8px; }
+  @supports (-webkit-touch-callout: none) {
+    input[type="date"] { -webkit-appearance: none; appearance: none; }
+    input[type="date"]::-webkit-date-and-time-value { text-align: left; }
   }
   input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
   .money { position: relative; }
