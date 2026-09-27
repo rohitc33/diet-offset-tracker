@@ -12,8 +12,10 @@ Each meal's offset is the *welfare gap*, meaning the extra you would have paid i
 offset = price paid × meat share × (humane multiplier − 1)
 ```
 
-- **Humane multiplier**: roughly how many times more a high-welfare version of that meat costs than conventional (e.g. chicken 3.5×, pork 2.75×, beef 1.6×). These are rough estimates and can be edited per meat type.
-- **Meat share**: how much of the price was the meat itself. Defaults are 35% for a restaurant dish and 100% for groceries. Both are editable.
+- **Humane multiplier**: how many times more the high-welfare version costs than ordinary supermarket meat. Where data exists, it compares USDA AMS 2026 averages for pasture-raised or grass-fed meat sold directly by farms with BLS average supermarket prices for the same product. Current values: chicken 3.7×, eggs 3.9×, pork 2.7×, turkey 2.4× (weak data), beef 1.55×. Meats without good price data (duck, veal, lamb, goat, fish, shrimp) are marked as estimates. Every value, its reasoning and its sources are shown in the app's settings and can be edited.
+- **Meat share**: how much of the price was the meat itself. Restaurants spend about 28–35% of the menu price on all ingredients, so the default for a restaurant dish is 20%. Groceries default to 100%.
+
+The offset measures the *price* gap, not suffering. Cheap fixes like stunning fish and shrimp barely raise the price, so those offsets are small even though a dollar of fish or shrimp involves many animals.
 
 Changing settings only affects new entries. Logged meals keep the values they were logged with.
 

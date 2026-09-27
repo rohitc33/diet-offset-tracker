@@ -123,10 +123,16 @@
 
   details summary { cursor: pointer; font-weight: 600; }
   details[open] summary { margin-bottom: 12px; }
-  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-  th, td { text-align: left; padding: 6px 4px; border-top: 1px solid var(--border); vertical-align: top; }
-  th { color: var(--muted); font-weight: 500; border-top: 0; }
-  td input { padding: 6px 8px; width: 80px; }
+  .meat-row { border-top: 1px solid var(--border); padding: 10px 0; }
+  .meat-row p { margin: 6px 0; }
+  .meat-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .meat-input { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; }
+  .meat-input input { width: 84px; padding: 6px 8px; }
+  .badge { font-size: 0.72rem; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); }
+  .badge.sourced { color: var(--accent); border-color: var(--accent); }
+  .src-list { margin: 0; padding-left: 18px; font-size: 0.8rem; }
+  .src-list li { margin: 2px 0; }
+  a { color: var(--accent); }
   .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
   @media (max-width: 520px) { .settings-grid { grid-template-columns: 1fr; } }
   .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
@@ -255,12 +261,22 @@
       </p>
       <p class="small num"><strong>offset = price paid × meat share × (humane multiplier − 1)</strong></p>
       <p class="small muted">
-        <em>Meat share</em> is roughly how much of the price was the meat itself. A restaurant plate's price mostly covers
-        labour, rent and sides; a grocery purchase is nearly all meat. <em>Humane multiplier</em> is roughly how many times more
-        the high-welfare version costs than typical conventional meat. The defaults below are rough estimates
-        based on typical US retail price gaps between conventional and pasture-raised / higher-welfare-certified products.
-        Adjust them to match your own prices. Changes apply to new entries only; logged meals keep the numbers they were logged with.
+        <strong>Humane multiplier</strong> is how many times more the high-welfare version costs than ordinary supermarket meat.
+        Where data exists it compares USDA's 2026 averages for pasture-raised / grass-fed meat sold directly by farms with the
+        BLS average supermarket price for the same product. That's what humane meat actually costs to buy today.
+        Farm-direct prices include some small-farm overhead that wouldn't exist at scale; industry cost studies of cheaper welfare
+        reforms show much smaller premiums (see chicken). Meats marked <em>estimate</em> have no good price data, and the reasoning is given instead.
       </p>
+      <p class="small muted">
+        <strong>Meat share</strong> is how much of what you paid went on the meat. Restaurants spend about 28–35% of the menu price
+        on all ingredients, and the meat is usually the biggest part of that, so about 20% of a restaurant dish's price is the meat.
+        A grocery purchase is nearly all meat.
+      </p>
+      <p class="small muted">
+        Note: this measures the <em>price</em> gap, not suffering. Cheap fixes like stunning fish and shrimp barely change the price,
+        so those offsets come out small even though each dollar of fish or shrimp involves many animals.
+      </p>
+      <p class="small muted">Edits apply to new entries only. Logged meals keep the numbers they were logged with.</p>
 
       <div class="settings-grid">
         <div>
@@ -276,11 +292,10 @@
           <input id="currency" type="text" maxlength="3">
         </div>
       </div>
+      <p class="small muted" id="shareSource"></p>
 
-      <table>
-        <thead><tr><th>Meat</th><th>Humane multiplier</th><th class="small">Basis</th></tr></thead>
-        <tbody id="multTable"></tbody>
-      </table>
+      <h2 style="margin-top:20px">Humane multipliers</h2>
+      <div id="multList"></div>
 
       <div class="toolbar">
         <button class="btn" type="button" id="resetSettings">Reset to defaults</button>
@@ -301,25 +316,78 @@
 
   var STORAGE_KEY = "dietOffsetTracker.v1";
 
-  // multiplier = high-welfare price / conventional price (rough US retail estimates).
+  // multiplier = price of the high-welfare version / price of the conventional version.
+  // "sourced" values compare USDA AMS direct-to-consumer pasture-raised/grass-fed prices with BLS
+  // US city-average supermarket prices (2026). "estimate" values have no good price data; see basis.
+  var SRC = {
+    usdaPoultry: { label: "USDA AMS National Pasture Raised Poultry Report (Q3 2026)", url: "https://www.ams.usda.gov/mnreports/pymnprpoultry.pdf" },
+    usdaPork:    { label: "USDA AMS National Pasture Raised Pork Report (Q3 2026)", url: "https://www.ams.usda.gov/mnreports/lsmnprpork.pdf" },
+    usdaBeef:    { label: "USDA AMS National Grass Fed Beef Report (Q2 2026)", url: "https://www.ams.usda.gov/mnreports/lsmngfbeef.pdf" },
+    blsChicken:  { label: "BLS avg price: whole chicken (FRED APU0000706111)", url: "https://fred.stlouisfed.org/series/APU0000706111" },
+    blsEggs:     { label: "BLS avg price: eggs, grade A large (FRED APU0000708111)", url: "https://fred.stlouisfed.org/series/APU0000708111" },
+    blsChops:    { label: "BLS avg price: pork chops (FRED APU0000FD3101)", url: "https://fred.stlouisfed.org/series/APU0000FD3101" },
+    blsBacon:    { label: "BLS avg price: bacon (FRED APU0000704111)", url: "https://fred.stlouisfed.org/series/APU0000704111" },
+    blsBeef:     { label: "BLS avg price: ground beef (FRED APU0000703112)", url: "https://fred.stlouisfed.org/series/APU0000703112" },
+    adas:        { label: "ADAS for AVEC: costs of the European Chicken Commitment (2024)", url: "https://avec-poultry.eu/wp-content/uploads/2024/05/European-Chicken-Commitment-Report-ADAS-March-2024.pdf" },
+    turkeyConv:  { label: "Purdue CFDAS: expected cost of turkey in 2025", url: "https://ag.purdue.edu/cfdas/chew-on-this/the-expected-cost-of-your-thanksgiving-turkey-in-2025" },
+    turkeyPast:  { label: "Willow City Farm: 2025 pasture-raised turkey (single-farm example)", url: "https://www.willowcityfarm.com/product-page/2025-pasture-raised-fresh-turkey-deposit-only" },
+    fishStun:    { label: "Economic Feasibility of Stunning Farmed Fish in the EU (Animals, 2025)", url: "https://doi.org/10.3390/ani15192812" },
+    shrimpStun:  { label: "Shrimp Welfare Project: Humane Slaughter Initiative", url: "https://www.shrimpwelfareproject.org/humane-slaughter-initiative" },
+    shrimpStun2: { label: "Global Seafood Alliance: free electrical stunners for shrimp", url: "https://www.globalseafood.org/advocate/can-providing-free-electrical-stunners-move-the-needle-on-shrimp-welfare-practices/" },
+    awaDuck:     { label: "A Greener World: Animal Welfare Approved duck standards", url: "https://agreenerworld.org/certifications/animal-welfare-approved/standards/duck-standards/" },
+    mla:         { label: "Meat & Livestock Australia: tail docking and mulesing", url: "https://www.mla.com.au/research-and-development/animal-health-welfare-and-biosecurity/husbandry/tail-docking-and-mulesing/" },
+    foodCost:    { label: "VantaInsights: restaurant food cost is typically 28–35% of menu price", url: "https://vantainsights.com/insights/restaurant-food-cost-percentage" }
+  };
+
   var DEFAULT_MEATS = [
-    { key: "chicken", label: "Chicken", multiplier: 3.5, basis: "Fast-growing confined broilers vs. slower-growing breeds with outdoor access" },
-    { key: "turkey",  label: "Turkey",  multiplier: 3.0, basis: "Industrial vs. pasture-raised / heritage birds" },
-    { key: "duck",    label: "Duck",    multiplier: 2.5, basis: "Indoor-raised vs. outdoor access with water to bathe in" },
-    { key: "eggs",    label: "Eggs",    multiplier: 2.5, basis: "Caged vs. certified pasture-raised hens" },
-    { key: "pork",    label: "Pork",    multiplier: 2.75, basis: "Gestation-crate confinement vs. pasture-raised pigs" },
-    { key: "veal",    label: "Veal",    multiplier: 2.5, basis: "Confined calves vs. group-housed / pasture-raised" },
-    { key: "beef",    label: "Beef",    multiplier: 1.6, basis: "Feedlot-finished vs. grass-fed, pasture-finished" },
-    { key: "lamb",    label: "Lamb",    multiplier: 1.3, basis: "Already mostly pasture-raised; smaller gap" },
-    { key: "goat",    label: "Goat",    multiplier: 1.3, basis: "Already mostly pasture-raised; smaller gap" },
-    { key: "fish_farmed", label: "Farmed fish", multiplier: 2.0, basis: "High-density farms vs. lower density with humane stunning" },
-    { key: "fish_wild",   label: "Wild-caught fish", multiplier: 1.4, basis: "Bycatch and slow death vs. line-caught with fast slaughter" },
-    { key: "shrimp",  label: "Shrimp / shellfish", multiplier: 2.5, basis: "Intensive ponds vs. lower-density farms with electrical stunning" },
-    { key: "other",   label: "Other / mixed", multiplier: 2.0, basis: "Generic middle estimate" }
+    { key: "chicken", label: "Chicken", multiplier: 3.7, confidence: "sourced",
+      basis: "Pasture-raised whole fryer $7.42/lb vs. conventional whole chicken $2.01/lb → 3.7×. For comparison, the industry-commissioned ADAS study puts the extra production cost of indoor slower-growing breeds at lower density (European Chicken Commitment) at only +37.5%/kg. That's a cheaper welfare floor, but well short of minimal suffering.",
+      sources: [SRC.usdaPoultry, SRC.blsChicken, SRC.adas] },
+    { key: "turkey", label: "Turkey", multiplier: 2.4, confidence: "weak",
+      basis: "Pasture-raised ≈ $5.50/lb vs. conventional $2.31/lb average (2025) → 2.4×. The pasture price is a single-farm example, and holiday turkeys are often sold below cost (under $1/lb), so the real gap is often bigger.",
+      sources: [SRC.turkeyConv, SRC.turkeyPast] },
+    { key: "duck", label: "Duck", multiplier: 2.5, confidence: "estimate",
+      basis: "No reliable price data found. Set between turkey and chicken on the assumption that the main welfare costs are outdoor access, open water for bathing and lower density, as in Animal Welfare Approved standards.",
+      sources: [SRC.awaDuck] },
+    { key: "eggs", label: "Eggs", multiplier: 3.9, confidence: "sourced",
+      basis: "Pasture-raised large eggs $8.48/dozen vs. conventional $2.19/dozen (July 2026) → 3.9×. Supermarket pasture-raised brands at $6–8 would give about 3×. Egg prices swing a lot with bird flu outbreaks. The male chicks culled at hatcheries aren't included here.",
+      sources: [SRC.usdaPoultry, SRC.blsEggs] },
+    { key: "pork", label: "Pork", multiplier: 2.7, confidence: "sourced",
+      basis: "Pasture-raised bone-in chops $12.73/lb vs. conventional $4.24/lb (3.0×), and pasture-raised bacon $15.29/lb vs. $6.61/lb (2.3×). The two are averaged to 2.7×.",
+      sources: [SRC.usdaPork, SRC.blsChops, SRC.blsBacon] },
+    { key: "veal", label: "Veal", multiplier: 2.0, confidence: "estimate",
+      basis: "No reliable price data found. Assumes higher-welfare (\"rosé\") veal, where calves stay with their mothers or in groups on pasture, costs somewhat more relative to conventional than grass-fed beef does.",
+      sources: [] },
+    { key: "beef", label: "Beef", multiplier: 1.55, confidence: "sourced",
+      basis: "Grass-fed ground beef (80–89% lean) $10.67/lb vs. conventional ground beef $6.89/lb (July 2026) → 1.55×. Beef cattle already spend most of their lives on pasture, so the gap is smaller. Grass-fed labels don't guarantee pain relief for castration or dehorning, or better transport and slaughter.",
+      sources: [SRC.usdaBeef, SRC.blsBeef] },
+    { key: "lamb", label: "Lamb", multiplier: 1.2, confidence: "estimate",
+      basis: "Most lambs are already pasture-raised. The main welfare gaps are tail docking and castration without pain relief, plus transport and slaughter. Pain relief costs a few dollars per animal against a carcass worth hundreds, so the gap is small.",
+      sources: [SRC.mla] },
+    { key: "goat", label: "Goat", multiplier: 1.2, confidence: "estimate",
+      basis: "Same reasoning as lamb: mostly pasture-raised already, so the gap is mainly pain relief and better handling.",
+      sources: [] },
+    { key: "fish_farmed", label: "Farmed fish", multiplier: 1.25, confidence: "estimate",
+      basis: "Stunning fish before slaughter, instead of letting them suffocate, adds only €0.06–0.33/kg (1–13% of production cost, about 2% on average). The rest of the 1.25× is an unsourced allowance for lower stocking densities.",
+      sources: [SRC.fishStun] },
+    { key: "fish_wild", label: "Wild-caught fish", multiplier: 1.1, confidence: "estimate",
+      basis: "Wild fish usually die by suffocation or crushing. Stunning them on board would add only a small cost. The 1.1× is a guess. Bycatch and the sheer number of fish killed aren't reflected in a price gap.",
+      sources: [] },
+    { key: "shrimp", label: "Shrimp / shellfish", multiplier: 1.2, confidence: "estimate",
+      basis: "Electrical stunning costs under 1¢/kg: a $60k stunner handles 5 t/hour on ≈$1/hour of electricity. Most of the 1.2× is an unsourced allowance for lower density and not removing the mothers' eyestalks (a common breeding practice).",
+      sources: [SRC.shrimpStun, SRC.shrimpStun2] },
+    { key: "other", label: "Other / mixed", multiplier: 2.0, confidence: "estimate",
+      basis: "Middle-of-the-range guess. Pick the main meat instead when you can.",
+      sources: [] }
   ];
+  // Defaults shipped before sourced multipliers; saved values equal to these are upgraded.
+  var LEGACY_DEFAULTS = { chicken: 3.5, turkey: 3.0, duck: 2.5, eggs: 2.5, pork: 2.75, veal: 2.5, beef: 1.6,
+    lamb: 1.3, goat: 1.3, fish_farmed: 2.0, fish_wild: 1.4, shrimp: 2.5, other: 2.0 };
+  var SETTINGS_VERSION = 2;
   var DEFAULT_SETTINGS = {
     currency: "$",
-    shares: { restaurant: 35, grocery: 100 },
+    shares: { restaurant: 20, grocery: 100 },
+    version: SETTINGS_VERSION,
     lastContext: "restaurant",
     lastMeat: "chicken",
     meats: DEFAULT_MEATS
@@ -338,11 +406,17 @@
     var s = Object.assign(clone(DEFAULT_SETTINGS), data.settings || {});
     s.shares = Object.assign(clone(DEFAULT_SETTINGS.shares), (data.settings && data.settings.shares) || {});
     // Keep saved multipliers, but pick up any meat types added in newer versions.
+    // Settings saved before v2 still carry the old unsourced defaults: upgrade those, keep user edits.
+    var legacy = !(data.settings && data.settings.version >= SETTINGS_VERSION) && !!data.settings;
     var saved = Array.isArray(s.meats) ? s.meats : [];
     s.meats = DEFAULT_MEATS.map(function (d) {
       var m = saved.find(function (x) { return x && x.key === d.key; });
-      return Object.assign(clone(d), m ? { multiplier: Number(m.multiplier) || d.multiplier } : {});
+      var v = m ? Number(m.multiplier) : NaN;
+      if (!(v >= 1) || (legacy && v === LEGACY_DEFAULTS[d.key])) v = d.multiplier;
+      return Object.assign(clone(d), { multiplier: v });
     });
+    if (legacy && s.shares.restaurant === 35) s.shares.restaurant = DEFAULT_SETTINGS.shares.restaurant;
+    s.version = SETTINGS_VERSION;
     return {
       entries: Array.isArray(data.entries) ? data.entries : [],
       donations: Array.isArray(data.donations) ? data.donations : [],
@@ -640,8 +714,12 @@
     $("shareRestaurant").value = state.settings.shares.restaurant;
     $("shareGrocery").value = state.settings.shares.grocery;
     $("currency").value = state.settings.currency;
-    var tb = $("multTable");
-    tb.innerHTML = "";
+    var fs = $("shareSource");
+    fs.innerHTML = "";
+    fs.appendChild(document.createTextNode("Restaurant share source: "));
+    fs.appendChild(sourceLink(SRC.foodCost));
+    var list = $("multList");
+    list.innerHTML = "";
     state.settings.meats.forEach(function (m) {
       var inp = el("input", { type: "number", min: "1", max: "20", step: "0.05", value: String(m.multiplier), "aria-label": m.label + " humane multiplier" });
       inp.addEventListener("change", function () {
@@ -651,12 +729,23 @@
         save();
         renderForm();
       });
-      tb.appendChild(el("tr", null, [
-        el("td", { text: m.label }),
-        el("td", null, [inp]),
-        el("td", { class: "small muted", text: m.basis })
+      var badgeText = { sourced: "sourced", weak: "weak data", estimate: "estimate" }[m.confidence] || "";
+      var srcs = el("ul", { class: "src-list" });
+      m.sources.forEach(function (x) { srcs.appendChild(el("li", null, [sourceLink(x)])); });
+      list.appendChild(el("div", { class: "meat-row" }, [
+        el("div", { class: "meat-head" }, [
+          el("span", { class: "entry-title", text: m.label }),
+          el("span", { class: "badge " + m.confidence, text: badgeText }),
+          el("span", { class: "meat-input" }, [inp, el("span", { class: "muted", text: "×" })])
+        ]),
+        el("p", { class: "small muted", text: m.basis }),
+        m.sources.length ? srcs : null
       ]));
     });
+  }
+
+  function sourceLink(x) {
+    return el("a", { href: x.url, target: "_blank", rel: "noopener noreferrer", text: x.label });
   }
 
   function bindShare(id, key) {
