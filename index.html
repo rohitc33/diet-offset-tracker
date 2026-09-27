@@ -141,7 +141,13 @@
   }
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  #contextHelp { margin: 4px 0 0; }
+  /* Two phrases that each stay on one line; if both don't fit, the second wraps to its own line.
+     Every phrase starts with a "·" separator, and the inner row is shifted left by the separator's width so the
+     separator of whichever phrase begins a line falls outside the clipped box and is hidden. */
+  #contextHelp { margin: 4px 0 0; overflow: hidden; }
+  #contextHelp .help-row { display: flex; flex-wrap: wrap; margin-left: -1.2em; }
+  #contextHelp .help-part { white-space: nowrap; }
+  #contextHelp .help-part::before { content: "·"; display: inline-block; width: 1.2em; text-align: center; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   #addMealBtn .amt { font-weight: 400; opacity: 0.9; }
   /* Short screens (e.g. 320×568): drop non-essential lines so the Log screen still fits without scrolling */
@@ -653,8 +659,12 @@
 
   function updatePreview() {
     var m = meatByKey($("meat").value);
-    $("contextHelp").textContent = CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) +
-      (m ? " · humane costs " + m.multiplier + "×" : "");
+    var help = $("contextHelp");
+    help.innerHTML = "";
+    help.appendChild(el("div", { class: "help-row" }, [
+      el("span", { class: "help-part", text: CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) }),
+      m ? el("span", { class: "help-part", text: "humane costs " + m.multiplier + "×" }) : null
+    ]));
     var price = parseFloat($("price").value);
     var btn = $("addMealBtn");
     btn.textContent = "Add meal";
