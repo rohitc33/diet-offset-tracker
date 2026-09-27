@@ -310,18 +310,18 @@
 
     <section class="view" id="view-settings" data-title="Settings">
       <div class="card">
-        <h2>Meat share &amp; currency</h2>
+        <h2>How much of the price is meat</h2>
       <div class="settings-grid">
         <div>
-          <label for="shareRestaurant">Meat share, restaurant (%)</label>
+          <label for="shareRestaurant">Restaurant (%)</label>
           <input id="shareRestaurant" type="number" min="1" max="100" step="1">
         </div>
         <div>
-          <label for="shareCafeteria">Meat share, cafeteria (%)</label>
+          <label for="shareCafeteria">Work cafeteria (%)</label>
           <input id="shareCafeteria" type="number" min="1" max="100" step="1">
         </div>
         <div>
-          <label for="shareGrocery">Meat share, groceries (%)</label>
+          <label for="shareGrocery">Groceries (%)</label>
           <input id="shareGrocery" type="number" min="1" max="100" step="1">
         </div>
         <div>
@@ -333,53 +333,54 @@
 
       </div>
       <div class="card">
-      <h2>Humane multipliers</h2>
+      <h2>How much more humane meat would cost</h2>
+      <p class="small muted">For example, 2× means twice today's price. Tap a number to change it.</p>
       <div id="multList"></div>
 
       </div>
       <div class="card">
         <h2>How it's calculated</h2>
       <p class="small">
-        Each meal's offset is the <em>welfare gap</em>: how much more that meat would have cost if a national law required
-        every farm to raise and kill animals to a high welfare standard ("tier B"): no cages or crates, lower stocking density,
-        slower-growing breeds and outdoor access where relevant, pain relief for painful procedures, and effective stunning at slaughter.
+        Imagine a law that required every farm to treat animals well: no cages or crates, less crowding, breeds that
+        grow at a natural pace, time outdoors where it suits the animal, pain relief for painful procedures, and stunning so
+        animals are unconscious when they're killed. Meat would cost more. Each meal's offset is that extra cost,
+        which you give to animal welfare causes instead.
       </p>
-      <p class="small num"><strong>offset = price paid × meat share × (humane multiplier − 1)</strong></p>
-      <p class="small muted">
-        <strong>Humane multiplier</strong> estimates the long-run supermarket price once <em>all</em> meat meets that standard, divided by
-        today's price. It reflects production cost at scale, not today's niche prices. Humane products cost far more today partly because
-        small farms have higher costs per animal and partly because shops charge a premium for labels.
-        It isn't the price during the changeover either: after California's hen-housing law, egg prices were 33% higher at first but only
-        about 9% higher two years later.
+      <p class="small"><strong>Offset = what you paid × share of the price that's meat × (humane price − 1)</strong></p>
+      <p class="small muted num">
+        Example: a $20 restaurant chicken dish. About 20% of a restaurant price is the meat ($4), and humane chicken would
+        cost about 2× as much, so the extra is $4 × (2 − 1) = <strong>$4.00</strong>.
       </p>
       <p class="small muted">
-        Each meat also shows two comparison numbers. The <em>legislated minimum</em> is roughly what current welfare laws require
-        (California's Prop 12 and EU rules): no cages or crates, stunning, some pain relief. It's much cheaper but still leaves fast-growing
-        animals kept indoors. <em>Farm-direct price today</em> is what pasture-raised meat costs from small farms right now
-        (USDA 2026 direct-to-consumer prices vs. BLS supermarket averages).
-        For land animals, only chicken, eggs and pork have cost studies behind them. Everything else is labelled as an estimate,
-        with the reasoning given.
+        <strong>Humane price</strong> is an estimate of what the meat would cost once <em>every</em> farm meets that standard, not what
+        specialty humane meat costs today. Today's humane meat is mostly made by small farms, which cost more to run, and shops also
+        charge extra for the label. It's also not the short-term price spike while farms switch over: when California banned
+        cramped hen cages, egg prices rose 33% at first but settled at about 9% above where they'd have been.
       </p>
       <p class="small muted">
-        <strong>Meat share</strong> is how much of what you paid went on the meat. Restaurants spend about 28–35% of the menu price
-        on all ingredients, and the meat is usually the biggest part of that, so about 20% of a restaurant dish's price is the meat.
-        A subsidized work cafeteria charges roughly the ingredient cost, and on that basis the meat is about two-thirds of the
-        ingredients (20% of a menu price out of the ~30% spent on ingredients), so the cafeteria default is 65%.
-        A grocery purchase is nearly all meat.
+        Each meat shows two numbers for comparison. <em>Current welfare laws</em> is roughly the price if all meat met the
+        strictest laws that exist today (California and the EU). They ban cages and crates, but most animals still grow very fast
+        and live indoors. <em>Pasture farms today</em> is what pasture-raised meat costs from small farms right now.
+        Only chicken, eggs and pork have cost studies behind them. Everything else is marked <em>best guess</em>, with the reasoning.
       </p>
       <p class="small muted">
-        Note: this measures the <em>price</em> gap, not suffering. Cheap fixes like stunning fish and shrimp barely change the price,
-        so those offsets come out small even though each dollar of fish or shrimp involves many animals.
+        <strong>Share of the price that's meat</strong>: restaurants spend about 30% of the menu price on ingredients, and meat
+        is usually the biggest part, so about 20% of a restaurant price is the meat. A subsidized work cafeteria charges roughly what
+        the ingredients cost, and meat is about two-thirds of that (65%). Groceries are nearly all meat.
+      </p>
+      <p class="small muted">
+        This measures cost, not suffering. Cheap fixes like stunning fish and shrimp barely change the price, so their offsets
+        come out small, even though each dollar spent on them involves many more animals.
       </p>
       <p class="small muted">Edits apply to new entries only. Logged meals keep the numbers they were logged with, unless you use
-        "Recalculate logged meals" under Data.</p>
+        "Recalculate past meals" under Data.</p>
 
       </div>
       <div class="card">
         <h2>Data</h2>
       <div class="toolbar">
         <button class="btn" type="button" id="resetSettings">Reset to defaults</button>
-        <button class="btn" type="button" id="recalcBtn">Recalculate logged meals</button>
+        <button class="btn" type="button" id="recalcBtn">Recalculate past meals</button>
         <button class="btn" type="button" id="exportBtn">Export backup</button>
         <button class="btn" type="button" id="importBtn">Import backup</button>
         <input type="file" id="importFile" accept="application/json,.json" class="hidden">
@@ -452,43 +453,43 @@
   // EU rules) and "farmgate" (today's farm-direct pasture price) are shown for comparison only.
   var DEFAULT_MEATS = [
     { key: "chicken", label: "Chicken", multiplier: 2.0, range: "1.8–2.5", tierA: 1.3, farmgate: 3.7, confidence: "anchored",
-      basis: "The ADAS study puts indoor slower-growing breeds at lower density at +37.5% production cost per kg. It was commissioned by the processors' association, so treat it as an upper bound for that step. Outdoor access and longer lives add more on top, but nobody has costed that at national scale. The top of the range comes from EU free-range retail prices, which include niche margin, so this uses the lower-middle.",
+      basis: "Most chickens are bred to grow so fast their legs and hearts struggle. An industry-funded study found that slower-growing breeds with more space cost up to 37.5% more to produce. Time outdoors adds more, but nobody has worked out that cost at national scale, so this is partly a guess.",
       sources: [SRC.adas, SRC.usdaPoultry, SRC.blsChicken] },
     { key: "turkey", label: "Turkey", multiplier: 2.0, range: "1.8–2.5", tierA: 1.3, farmgate: 2.4, confidence: "estimate",
-      basis: "Same reasoning as chicken. Slower-growing turkey lines exist, but cost data is thinner.",
+      basis: "Same reasoning as chicken. Slower-growing turkeys exist, but there's less cost data.",
       sources: [SRC.turkeyConv, SRC.turkeyPast] },
     { key: "duck", label: "Duck", multiplier: 2.0, range: "1.8–2.5", tierA: 1.3, farmgate: 2.5, confidence: "estimate",
-      basis: "Open water for bathing, outdoor access and lower density. No good cost data, so this follows chicken and turkey.",
+      basis: "Ducks need open water to bathe in, time outdoors and less crowding. There's no good cost data, so this follows chicken and turkey.",
       sources: [SRC.awaDuck] },
     { key: "eggs", label: "Eggs", multiplier: 1.75, range: "1.5–2.0", tierA: 1.2, farmgate: 3.9, confidence: "anchored",
-      basis: "Cage-free aviaries cost 36% more per dozen to produce. After California's hen-housing law, retail prices were 33% higher at first and about 9% higher two years later. Tier B adds real outdoor range and more space per hen, roughly doubling the cage-free premium. Culling male chicks isn't included.",
+      basis: "Cage-free barns cost 36% more per dozen to run. When California banned cramped cages, egg prices rose 33% at first and settled about 9% higher. Real outdoor access and more space per hen roughly double that. Killing male chicks at hatcheries isn't included.",
       sources: [SRC.csesEggs, SRC.luskEggs, SRC.purdueProp12] },
     { key: "pork", label: "Pork", multiplier: 1.75, range: "1.5–2.0", tierA: 1.15, farmgate: 2.7, confidence: "anchored",
-      basis: "Sow space alone: removing gestation stalls adds 3–4¢/lb (about 8.7%) to farm production cost, and Prop 12 was forecast to add 7.7% to retail pork. In practice, California prices on covered cuts rose about 20% during the changeover, which includes one-off costs of switching and keeping supply chains separate. Tier B adds no farrowing crates, outdoor or deep-straw finishing, and pain relief for castration.",
+      basis: "Giving pregnant sows room to turn around adds only 3–4¢/lb to farm costs. California's farm animal law (Prop 12) was forecast to raise pork prices about 8%, though prices actually jumped around 20% during the switch-over. On top of that, this includes no crates for mothers giving birth, outdoor or straw-bedded pens, and pain relief for castration.",
       sources: [SRC.ersSows, SRC.sumnerPork, SRC.gianniniPork, SRC.usdaPork] },
     { key: "veal", label: "Veal", multiplier: 1.4, range: "1.3–1.5", tierA: 1.1, farmgate: 2.0, confidence: "estimate",
-      basis: "Crate bans (already law in the EU and California) cost little. Tier B means calves raised with their mothers or in groups on pasture (\"rosé\" systems), which have no good at-scale cost data.",
+      basis: "Banning veal crates, already law in the EU and California, costs little. Going further, with calves raised alongside their mothers or in groups on pasture, has no good cost data.",
       sources: [] },
     { key: "beef", label: "Beef", multiplier: 1.3, range: "1.2–1.4", tierA: 1.03, farmgate: 1.55, confidence: "estimate",
-      basis: "Pain relief for castration and dehorning, shorter transport and better stunning are cheap per animal (tier A ≈ 1.03×). Most of the rest is grass-finishing at scale, which is arguably more about diet than welfare, so this may overstate the welfare cost.",
+      basis: "Pain relief for castration and dehorning, shorter truck journeys and better stunning are cheap per animal, only a few percent. Most of the rest is finishing cattle on grass instead of feedlots, which is arguably more about diet than welfare, so this may be too high.",
       sources: [SRC.usdaBeef, SRC.blsBeef] },
     { key: "lamb", label: "Lamb", multiplier: 1.08, range: "1.05–1.10", tierA: 1.03, farmgate: 1.2, confidence: "estimate",
-      basis: "Lambs are already mostly pasture-raised, so the gap is mainly pain relief for tail docking and castration, plus better handling, transport and slaughter.",
+      basis: "Lambs mostly live on pasture already, so the main extra cost is pain relief when their tails are docked and they're castrated, plus gentler handling, transport and slaughter.",
       sources: [SRC.mla] },
     { key: "goat", label: "Goat", multiplier: 1.08, range: "1.05–1.10", tierA: 1.03, farmgate: 1.2, confidence: "estimate",
       basis: "Same reasoning as lamb.",
       sources: [] },
     { key: "fish_farmed", label: "Farmed fish", multiplier: 1.2, range: "1.15–1.3", tierA: 1.1, farmgate: 1.25, confidence: "estimate",
-      basis: "Stunning before slaughter adds only about 2% to production cost on average (€0.06–0.33/kg). The rest allows for lower stocking density and enrichment, which hasn't been costed.",
+      basis: "Stunning fish before killing them, instead of letting them suffocate, adds only about 2% to farm costs. The rest allows for less crowded pens, which nobody has costed.",
       sources: [SRC.fishStun] },
     { key: "fish_wild", label: "Wild-caught fish", multiplier: 1.05, range: "1.02–1.05", tierA: 1.03, farmgate: 1.1, confidence: "estimate",
-      basis: "Stunning on board is about the only welfare change a law can make here. Bycatch and the sheer number of fish killed aren't reflected in a price.",
+      basis: "Stunning fish on the boat is about the only welfare change possible. The huge numbers caught, and other animals caught by accident, don't show up in a price.",
       sources: [] },
     { key: "shrimp", label: "Shrimp / shellfish", multiplier: 1.1, range: "1.05–1.15", tierA: 1.03, farmgate: 1.2, confidence: "estimate",
-      basis: "Electrical stunning costs under 1¢/kg, and ending eyestalk ablation (removing the mothers' eyestalks to speed breeding) costs roughly nothing. The rest allows for lower density and better water quality.",
+      basis: "Stunning shrimp costs under 1¢ per kilo, and ending the practice of cutting off mother shrimps' eyestalks to speed up breeding costs almost nothing. The rest allows for less crowding and cleaner water.",
       sources: [SRC.shrimpStun, SRC.shrimpStun2] },
     { key: "other", label: "Other / mixed", multiplier: 1.5, range: "1.1–2.0", tierA: 1.15, farmgate: 2.0, confidence: "estimate",
-      basis: "Middle-of-the-range guess. Pick the main meat instead when you can.",
+      basis: "A middle-of-the-range guess. Pick the main meat instead when you can.",
       sources: [] }
   ];
   // Earlier shipped defaults; saved values still equal to one of these are upgraded, user edits are kept.
@@ -643,7 +644,7 @@
   function updatePreview() {
     var m = meatByKey($("meat").value);
     $("contextHelp").textContent = CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) +
-      (m ? " · humane ≈ " + m.multiplier + "×" : "");
+      (m ? " · humane costs " + m.multiplier + "×" : "");
     var price = parseFloat($("price").value);
     var btn = $("addMealBtn");
     btn.textContent = "Add meal";
@@ -776,7 +777,7 @@
       var title = e.dish ? e.dish : meatLabel(e);
       var meta = fmtDate(e.date) + " · " + (e.dish ? meatLabel(e) + " · " : "") +
         (CONTEXTS[e.context] || CONTEXTS.restaurant).label + " · paid " + money(e.price) +
-        " · " + e.multiplier + "× · " + Math.round(e.share * 100) + "% meat";
+        " · humane " + e.multiplier + "×, " + Math.round(e.share * 100) + "% meat";
       var del = el("button", { class: "btn link", type: "button", "aria-label": "Delete " + title, title: "Delete", text: "✕" });
       del.addEventListener("click", function () { removeItem("entries", e.id, "Meal"); });
       ul.appendChild(el("li", null, [
@@ -843,12 +844,12 @@
     $("currency").value = state.settings.currency;
     var fs = $("shareSource");
     fs.innerHTML = "";
-    fs.appendChild(document.createTextNode("Restaurant share source: "));
+    fs.appendChild(document.createTextNode("Source for the restaurant figure: "));
     fs.appendChild(sourceLink(SRC.foodCost));
     var list = $("multList");
     list.innerHTML = "";
     state.settings.meats.forEach(function (m) {
-      var inp = el("input", { type: "number", min: "1", max: "20", step: "0.05", value: String(m.multiplier), "aria-label": m.label + " humane multiplier" });
+      var inp = el("input", { type: "number", min: "1", max: "20", step: "0.05", value: String(m.multiplier), "aria-label": m.label + " humane price" });
       inp.addEventListener("change", function () {
         var v = parseFloat(inp.value);
         if (!(v >= 1)) { inp.value = m.multiplier; return; }
@@ -856,7 +857,7 @@
         save();
         renderForm();
       });
-      var badgeText = { anchored: "partly sourced", estimate: "estimate" }[m.confidence] || "";
+      var badgeText = { anchored: "based on studies", estimate: "best guess" }[m.confidence] || "";
       var srcs = el("ul", { class: "src-list" });
       m.sources.forEach(function (x) { srcs.appendChild(el("li", null, [sourceLink(x)])); });
       list.appendChild(el("div", { class: "meat-row" }, [
@@ -865,7 +866,7 @@
           el("span", { class: "badge " + m.confidence, text: badgeText }),
           el("span", { class: "meat-input" }, [inp, el("span", { class: "muted", text: "×" })])
         ]),
-        el("p", { class: "small compare num", text: "Range " + m.range + "× · legislated minimum ≈ " + m.tierA + "× · farm-direct price today ≈ " + m.farmgate + "×" }),
+        el("p", { class: "small compare num", text: "Likely range " + m.range + "× · current welfare laws " + m.tierA + "× · pasture farms today " + m.farmgate + "×" }),
         el("p", { class: "small muted", text: m.basis }),
         m.sources.length ? srcs : null
       ]));
@@ -898,7 +899,7 @@
   });
 
   $("resetSettings").addEventListener("click", function () {
-    if (!confirm("Reset multipliers, meat shares and currency to defaults? Logged meals are not changed.")) return;
+    if (!confirm("Reset humane prices, meat percentages and currency to the defaults? Past meals won't change.")) return;
     var keep = { lastContext: state.settings.lastContext, lastMeat: state.settings.lastMeat };
     state.settings = Object.assign(clone(DEFAULT_SETTINGS), keep);
     save();
@@ -911,7 +912,7 @@
   $("recalcBtn").addEventListener("click", function () {
     var n = state.entries.length;
     if (!n) { toast("No meals to recalculate"); return; }
-    if (!confirm("Recalculate all " + n + " logged meals with the current multipliers and meat shares?")) return;
+    if (!confirm("Recalculate all " + n + " past meals using the current settings?")) return;
     state.entries.forEach(function (e) {
       var r = computeOffset(e.price, e.meat, e.context || "restaurant");
       e.multiplier = r.multiplier; e.share = r.share; e.offset = r.offset;

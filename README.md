@@ -6,18 +6,20 @@ Open `index.html` in any browser. No server, build step or network access needed
 
 ## How the offset is calculated
 
-Each meal's offset is the *welfare gap*: how much more that meat would have cost if a national law required every farm to meet a high welfare standard ("tier B"). That means no cages or crates, lower stocking density, slower-growing breeds and outdoor access where relevant, pain relief, and effective stunning.
+Imagine a law that required every farm to treat animals well: no cages or crates, less crowding, breeds that grow at a natural pace, time outdoors where it suits the animal, pain relief for painful procedures, and stunning so animals are unconscious when they're killed. Meat would cost more. Each meal's offset is that extra cost, which you give to animal welfare causes instead.
 
 ```
-offset = price paid × meat share × (humane multiplier − 1)
+offset = what you paid × share of the price that's meat × (humane price − 1)
 ```
 
-- **Humane multiplier**: the estimated long-run retail price once *all* meat meets tier B, divided by today's price. It reflects production cost at scale, not today's niche prices or the temporary spike while farms convert. Current values: chicken, turkey and duck 2.0×, eggs and pork 1.75×, veal 1.4×, beef 1.3×, farmed fish 1.2×, shrimp 1.1×, lamb and goat 1.08×, wild fish 1.05×. Chicken, eggs and pork are partly backed by cost studies (ADAS, Coalition for Sustainable Egg Supply, Prop 12 research). The rest are labelled estimates with the reasoning given. For comparison, each meat also shows the *legislated minimum* (Prop 12 / EU-style rules) and today's *farm-direct* pasture price. Everything can be edited in Settings.
-- **Meat share**: how much of the price was the meat itself. Restaurants spend about 28–35% of the menu price on all ingredients, so the default for a restaurant dish is 20%. A subsidized work cafeteria charges roughly the ingredient cost, and meat is about two-thirds of the ingredients, so cafeteria meals default to 65%. Groceries default to 100%.
+For example, a $20 restaurant chicken dish: about 20% of a restaurant price is the meat ($4), and humane chicken would cost about 2× as much, so the offset is $4 × (2 − 1) = $4.00.
 
-The offset measures the *price* gap, not suffering. Cheap fixes like stunning fish and shrimp barely raise the price, so those offsets are small even though a dollar of fish or shrimp involves many animals.
+- **Humane price**: an estimate of what the meat would cost once *every* farm meets that standard, as a multiple of today's price. It's not what specialty humane meat costs today (small farms cost more to run, and shops charge extra for the label), and it's not the short-term spike while farms switch over. Current values: chicken, turkey and duck 2×, eggs and pork 1.75×, veal 1.4×, beef 1.3×, farmed fish 1.2×, shrimp 1.1×, lamb and goat 1.08×, wild fish 1.05×. Only chicken, eggs and pork are based on cost studies; the rest are marked as best guesses, with the reasoning. For comparison, each meat also shows the price under current welfare laws (California, EU) and what pasture farms charge today.
+- **Share of the price that's meat**: restaurants spend about 30% of the menu price on ingredients, mostly meat, so 20% of a restaurant price counts as meat. A subsidized work cafeteria charges roughly the ingredient cost, and meat is about two-thirds of that (65%). Groceries count as 100%.
 
-Changing settings only affects new entries. Logged meals keep the values they were logged with.
+This measures cost, not suffering. Cheap fixes like stunning fish and shrimp barely change the price, so their offsets come out small, even though each dollar spent on them involves many more animals.
+
+All values can be edited in the app's Settings tab. Changes apply to new meals only, unless you use "Recalculate past meals".
 
 ## Features
 
@@ -25,6 +27,6 @@ Changing settings only affects new entries. Logged meals keep the values they we
 - Running offset total for the year, plus a year picker for past years
 - Record donations to see how much is still left to give ("Fill balance" pre-fills the balance)
 - Breakdown of the offset by meat type
-- Delete with undo, JSON export/import for backups, and "Recalculate logged meals" to apply changed settings to past entries
-- App-style layout with a bottom tab bar: **Log** (totals and the meal form, fits on one phone screen), **History** (by-meat breakdown and meals), **Donate** (log donations and see the balance), **Settings** (meat shares, multipliers with sources, method, backup)
+- Delete with undo, JSON export/import for backups, and "Recalculate past meals" to apply changed settings to meals already logged
+- App-style layout with a bottom tab bar: **Log** (totals and the meal form, fits on one phone screen), **History** (by-meat breakdown and meals), **Donate** (log donations and see the balance), **Settings** (how much of the price is meat, humane prices with sources, how it's calculated, backup)
 - Mobile-friendly: large tap targets, no zoom-on-focus on iOS, safe-area padding for notched phones, and it can be added to the home screen
