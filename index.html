@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#141614" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Diet Offset">
 <title>Diet Offset Tracker</title>
 <meta name="description" content="Log meat purchases and track how much to donate to animal welfare causes to offset them.">
 <style>
@@ -43,10 +48,21 @@
     background: var(--bg);
     color: var(--text);
     font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
   }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  main {
+    max-width: 760px; margin: 0 auto;
+    padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right))
+             calc(72px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  }
+  @media (max-width: 520px) {
+    main { padding-top: max(12px, env(safe-area-inset-top)); }
+    .card { padding: 14px; margin-top: 12px; }
+  }
+  header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
   h1 { font-size: 1.35rem; margin: 0; }
+  @media (max-width: 380px) { h1 { font-size: 1.15rem; } }
   h2 { font-size: 1rem; margin: 0 0 12px; }
   .muted { color: var(--muted); }
   .small { font-size: 0.85rem; }
@@ -71,10 +87,18 @@
 
   /* Form */
   form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  @media (max-width: 520px) { form .row { grid-template-columns: 1fr; } }
+  form .row.dish-date { grid-template-columns: 1fr auto; }
+  form .field { margin-bottom: 12px; }
+  form .row > * { min-width: 0; }
+  @media (max-width: 420px) { form .row.don-actions { grid-template-columns: 1fr; } }
+  @media (max-width: 380px) {
+    form .row.dish-date { grid-template-columns: 1fr; }
+  }
   label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
-  input, select, button { font: inherit; color: inherit; }
+  input, select, button { font: inherit; color: inherit; touch-action: manipulation; }
   input, select {
+    font-size: 16px; /* 16px+ stops iOS zooming into focused fields */
+    min-height: 44px;
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--border);
@@ -87,29 +111,36 @@
   .money input { padding-left: 28px; }
   .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; width: 100%; }
   .seg button {
-    flex: 1; border: 0; background: var(--surface); padding: 10px 8px; cursor: pointer;
+    flex: 1; border: 0; background: var(--surface); padding: 10px 4px; min-height: 44px; cursor: pointer;
+    font-size: 0.95rem; white-space: nowrap;
   }
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
   .actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .preview { font-size: 0.95rem; }
+  #contextHelp { margin: 6px 0 12px; }
+  @media (max-width: 520px) {
+    .actions .btn.primary.wide { width: 100%; min-height: 48px; font-size: 1.05rem; }
+    .actions { gap: 8px; }
+  }
   .preview strong { color: var(--accent); }
   .btn {
     border: 1px solid var(--border); background: var(--surface); padding: 9px 14px; border-radius: 8px; cursor: pointer;
+    min-height: 44px;
   }
   .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
   .btn.danger { color: var(--danger); }
-  .btn.link { border: 0; background: none; padding: 4px 6px; color: var(--muted); }
+  .btn.link { border: 0; background: none; padding: 0; min-width: 44px; min-height: 44px; color: var(--muted); }
   .btn.link:hover { color: var(--danger); }
 
   /* Lists */
   ul.list { list-style: none; margin: 0; padding: 0; }
   ul.list li {
-    display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center;
-    padding: 10px 0; border-top: 1px solid var(--border);
+    display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center;
+    padding: 8px 0; border-top: 1px solid var(--border);
   }
   ul.list li:first-child { border-top: 0; }
-  .entry-title { font-weight: 600; }
+  .entry-title { font-weight: 600; overflow-wrap: anywhere; }
   .entry-meta { font-size: 0.85rem; color: var(--muted); }
   .entry-amt { text-align: right; }
   .entry-amt .owed { font-weight: 600; color: var(--accent); }
@@ -120,8 +151,9 @@
   .bar-row { display: grid; grid-template-columns: 110px 1fr 80px; gap: 10px; align-items: center; font-size: 0.9rem; }
   .bar-track { background: var(--surface-2); border-radius: 4px; height: 10px; overflow: hidden; }
   .bar-fill { background: var(--bar); height: 100%; border-radius: 4px; }
+  @media (max-width: 520px) { .bar-row { grid-template-columns: 96px 1fr 72px; gap: 8px; } }
 
-  details summary { cursor: pointer; font-weight: 600; }
+  details summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
   details[open] summary { margin-bottom: 12px; }
   .meat-row { border-top: 1px solid var(--border); padding: 10px 0; }
   .meat-row p { margin: 6px 0; }
@@ -133,16 +165,18 @@
   .src-list { margin: 0; padding-left: 18px; font-size: 0.8rem; }
   .src-list li { margin: 2px 0; }
   a { color: var(--accent); }
-  .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 12px 0; }
-  @media (max-width: 520px) { .settings-grid { grid-template-columns: 1fr; } }
+  .settings-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; align-items: end; }
+  @media (max-width: 620px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
   .toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
   .toast {
-    position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%);
+    position: fixed; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    max-width: calc(100vw - 32px); text-align: center;
     background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 0.9rem;
     opacity: 0; transition: opacity .2s; pointer-events: none;
   }
   .toast.show { opacity: 1; }
   .hidden { display: none !important; }
+  @media (max-width: 380px) { .seg button { font-size: 0.85rem; padding: 10px 2px; } }
 </style>
 </head>
 <body>
@@ -180,66 +214,36 @@
         </div>
         <div>
           <label for="price">What you paid</label>
-          <div class="money"><span class="cur"></span><input id="price" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0.00" required></div>
+          <div class="money"><span class="cur"></span><input id="price" type="number" inputmode="decimal" enterkeyhint="done" min="0" step="0.01" placeholder="0.00" required></div>
         </div>
       </div>
-      <div class="row">
+      <div class="field">
+        <label id="contextLabel">Bought at</label>
+        <div class="seg" role="group" aria-labelledby="contextLabel">
+          <button type="button" data-context="restaurant">Restaurant</button>
+          <button type="button" data-context="cafeteria">Cafeteria</button>
+          <button type="button" data-context="grocery">Groceries</button>
+        </div>
+        <div class="small muted" id="contextHelp"></div>
+      </div>
+      <div class="row dish-date">
         <div>
           <label for="dish">Dish (optional)</label>
-          <input id="dish" type="text" maxlength="80" placeholder="e.g. Chicken tikka masala">
+          <input id="dish" type="text" maxlength="80" enterkeyhint="done" placeholder="e.g. Chicken curry">
         </div>
         <div>
           <label for="date">Date</label>
           <input id="date" type="date" required>
         </div>
       </div>
-      <div class="row">
-        <div>
-          <label id="contextLabel">Bought as</label>
-          <div class="seg" role="group" aria-labelledby="contextLabel">
-            <button type="button" data-context="restaurant">Restaurant dish</button>
-            <button type="button" data-context="grocery">Groceries</button>
-          </div>
-        </div>
-        <div class="small muted" id="contextHelp" style="align-self:end"></div>
-      </div>
       <div class="actions">
         <div class="preview" id="preview" aria-live="polite"></div>
-        <button class="btn primary" type="submit">Add</button>
+        <button class="btn primary wide" type="submit">Add meal</button>
       </div>
     </form>
   </section>
 
-  <section class="card">
-    <h2>Log a donation</h2>
-    <form id="donationForm" autocomplete="off">
-      <div class="row">
-        <div>
-          <label for="donAmount">Amount</label>
-          <div class="money"><span class="cur"></span><input id="donAmount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required></div>
-        </div>
-        <div>
-          <label for="donOrg">Organization (optional)</label>
-          <input id="donOrg" type="text" maxlength="80" placeholder="e.g. The Humane League">
-        </div>
-      </div>
-      <div class="actions">
-        <div>
-          <label for="donDate" class="hidden">Date</label>
-          <input id="donDate" type="date" required style="width:auto" aria-label="Donation date">
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn" type="button" id="fillRemaining">Fill remaining</button>
-          <button class="btn primary" type="submit">Add donation</button>
-        </div>
-      </div>
-    </form>
-  </section>
 
-  <section class="card" id="breakdownCard">
-    <h2>By meat</h2>
-    <div class="bars" id="bars"></div>
-  </section>
 
   <section class="card">
     <h2>Meals</h2>
@@ -248,7 +252,37 @@
 
   <section class="card">
     <h2>Donations</h2>
+    <details id="donationDetails">
+      <summary>Log a donation</summary>
+    <form id="donationForm" autocomplete="off">
+        <div class="row">
+          <div>
+            <label for="donAmount">Amount</label>
+            <div class="money"><span class="cur"></span><input id="donAmount" type="number" inputmode="decimal" enterkeyhint="done" min="0.01" step="0.01" placeholder="0.00" required></div>
+          </div>
+          <div>
+            <label for="donOrg">Charity (optional)</label>
+            <input id="donOrg" type="text" maxlength="80" placeholder="e.g. The Humane League">
+          </div>
+        </div>
+        <div class="row don-actions">
+          <div>
+            <label for="donDate">Date</label>
+            <input id="donDate" type="date" required>
+          </div>
+          <div style="display:flex;gap:8px;align-items:stretch;align-self:end">
+            <button class="btn" type="button" id="fillRemaining" style="flex:1">Fill balance</button>
+            <button class="btn primary" type="submit" style="flex:1">Add</button>
+          </div>
+        </div>
+      </form>
+    </details>
     <ul class="list" id="donations"></ul>
+  </section>
+
+  <section class="card" id="breakdownCard">
+    <h2>By meat</h2>
+    <div class="bars" id="bars"></div>
   </section>
 
   <section class="card">
@@ -270,6 +304,8 @@
       <p class="small muted">
         <strong>Meat share</strong> is how much of what you paid went on the meat. Restaurants spend about 28–35% of the menu price
         on all ingredients, and the meat is usually the biggest part of that, so about 20% of a restaurant dish's price is the meat.
+        A subsidized work cafeteria charges roughly the ingredient cost, and on that basis the meat is about two-thirds of the
+        ingredients (20% of a menu price out of the ~30% spent on ingredients), so the cafeteria default is 65%.
         A grocery purchase is nearly all meat.
       </p>
       <p class="small muted">
@@ -282,6 +318,10 @@
         <div>
           <label for="shareRestaurant">Meat share, restaurant (%)</label>
           <input id="shareRestaurant" type="number" min="1" max="100" step="1">
+        </div>
+        <div>
+          <label for="shareCafeteria">Meat share, cafeteria (%)</label>
+          <input id="shareCafeteria" type="number" min="1" max="100" step="1">
         </div>
         <div>
           <label for="shareGrocery">Meat share, groceries (%)</label>
@@ -384,9 +424,14 @@
   var LEGACY_DEFAULTS = { chicken: 3.5, turkey: 3.0, duck: 2.5, eggs: 2.5, pork: 2.75, veal: 2.5, beef: 1.6,
     lamb: 1.3, goat: 1.3, fish_farmed: 2.0, fish_wild: 1.4, shrimp: 2.5, other: 2.0 };
   var SETTINGS_VERSION = 2;
+  var CONTEXTS = {
+    restaurant: { label: "Restaurant", help: "Restaurant prices mostly cover labour and rent, so meat is counted as ~{n}% of the price." },
+    cafeteria:  { label: "Cafeteria",  help: "Subsidized cafeteria price ≈ ingredient cost, so meat is counted as ~{n}% of it." },
+    grocery:    { label: "Groceries",  help: "Groceries are nearly all meat, so it's counted as ~{n}% of the price." }
+  };
   var DEFAULT_SETTINGS = {
     currency: "$",
-    shares: { restaurant: 20, grocery: 100 },
+    shares: { restaurant: 20, cafeteria: 65, grocery: 100 },
     version: SETTINGS_VERSION,
     lastContext: "restaurant",
     lastMeat: "chicken",
@@ -513,7 +558,8 @@
     document.querySelectorAll(".seg button").forEach(function (b) {
       b.setAttribute("aria-pressed", String(b.dataset.context === context));
     });
-    $("contextHelp").textContent = "Assumes meat is ~" + state.settings.shares[context] + "% of the price (editable in settings).";
+    if (!CONTEXTS[context]) context = "restaurant";
+    $("contextHelp").textContent = CONTEXTS[context].help.replace("{n}", state.settings.shares[context]) + " Editable in settings.";
     document.querySelectorAll(".cur").forEach(function (c) { c.textContent = state.settings.currency; });
     updatePreview();
   }
@@ -564,7 +610,9 @@
     selectedYear = date.slice(0, 4);
     $("price").value = "";
     $("dish").value = "";
-    $("price").focus();
+    // Keep focus for quick repeat entry on desktop; on touch screens let the keyboard close.
+    if (window.matchMedia && matchMedia("(pointer: coarse)").matches) document.activeElement.blur();
+    else $("price").focus();
     toast("Logged " + money(r.offset) + " to offset");
     render();
   });
@@ -647,15 +695,13 @@
     entries.forEach(function (e) {
       var title = e.dish ? e.dish : meatLabel(e);
       var meta = fmtDate(e.date) + " · " + (e.dish ? meatLabel(e) + " · " : "") +
-        (e.context === "grocery" ? "Groceries" : "Restaurant") + " · paid " + money(e.price);
+        (CONTEXTS[e.context] || CONTEXTS.restaurant).label + " · paid " + money(e.price) +
+        " · " + e.multiplier + "× · " + Math.round(e.share * 100) + "% meat";
       var del = el("button", { class: "btn link", type: "button", "aria-label": "Delete " + title, title: "Delete", text: "✕" });
       del.addEventListener("click", function () { removeItem("entries", e.id, "Meal"); });
       ul.appendChild(el("li", null, [
         el("div", null, [el("div", { class: "entry-title", text: title }), el("div", { class: "entry-meta", text: meta })]),
-        el("div", { class: "entry-amt" }, [
-          el("div", { class: "owed num", text: money(e.offset) }),
-          el("div", { class: "entry-meta num", text: e.multiplier + "× · " + Math.round(e.share * 100) + "% meat" })
-        ]),
+        el("div", { class: "entry-amt" }, [el("div", { class: "owed num", text: money(e.offset) })]),
         del
       ]));
     });
@@ -712,6 +758,7 @@
   // ---------- settings ----------
   function renderSettings() {
     $("shareRestaurant").value = state.settings.shares.restaurant;
+    $("shareCafeteria").value = state.settings.shares.cafeteria;
     $("shareGrocery").value = state.settings.shares.grocery;
     $("currency").value = state.settings.currency;
     var fs = $("shareSource");
@@ -758,6 +805,7 @@
     });
   }
   bindShare("shareRestaurant", "restaurant");
+  bindShare("shareCafeteria", "cafeteria");
   bindShare("shareGrocery", "grocery");
 
   $("currency").addEventListener("change", function () {
