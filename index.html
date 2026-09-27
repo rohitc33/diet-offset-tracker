@@ -141,19 +141,24 @@
   }
   .seg button + button { border-left: 1px solid var(--border); }
   .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
-  #contextHelp { margin: 4px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #contextHelp { margin: 4px 0 0; }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   #addMealBtn .amt { font-weight: 400; opacity: 0.9; }
   /* Short screens (e.g. 320×568): drop non-essential lines so the Log screen still fits without scrolling */
+  .btn.primary.wide { width: 100%; min-height: 48px; font-size: 1.05rem; }
+  /* Short screens (e.g. 320×568, or when the keyboard is open): tighten spacing so the Log screen still fits.
+     The "Bought at" label goes (the three buttons explain themselves), but the meat-percentage help line always stays. */
   @media (max-height: 640px) {
     .totals .big { font-size: 1.5rem; }
     .card { padding: 10px 12px; margin-top: 8px; }
     main { padding-top: 8px; }
-    #contextLabel, #contextHelp { display: none; }
+    #contextLabel { display: none; }
+    #contextHelp { font-size: 0.8rem; margin-top: 2px; }
     form .row, form .field { margin-bottom: 8px; }
     label { margin-bottom: 2px; }
+    .seg button { min-height: 40px; padding-top: 6px; padding-bottom: 6px; }
+    .btn.primary.wide { min-height: 44px; }
   }
-  .btn.primary.wide { width: 100%; min-height: 48px; font-size: 1.05rem; }
   .preview strong { color: var(--accent); }
   .btn {
     border: 1px solid var(--border); background: var(--surface); padding: 9px 14px; border-radius: 8px; cursor: pointer;
@@ -506,9 +511,9 @@
   ];
   var SETTINGS_VERSION = 3;
   var CONTEXTS = {
-    restaurant: { label: "Restaurant", help: "{n}% of price counted as meat" },
-    cafeteria:  { label: "Cafeteria",  help: "{n}% of price counted as meat" },
-    grocery:    { label: "Groceries",  help: "{n}% of price counted as meat" }
+    restaurant: { label: "Restaurant", help: "{n}% of the price is meat" },
+    cafeteria:  { label: "Cafeteria",  help: "{n}% of the price is meat" },
+    grocery:    { label: "Groceries",  help: "{n}% of the price is meat" }
   };
   var DEFAULT_SETTINGS = {
     currency: "$",
