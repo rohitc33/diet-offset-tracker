@@ -381,8 +381,9 @@
       </p>
       <p class="small muted">
         <strong>Share of the price that's meat</strong>: restaurants spend about 30% of the menu price on ingredients, and meat
-        is usually the biggest part, so about 20% of a restaurant price is the meat. A subsidized work cafeteria charges roughly what
-        the ingredients cost, and meat is about two-thirds of that (65%). Groceries are nearly all meat.
+        is usually the biggest part, so about 20% of a restaurant price is the meat. A subsidized work cafeteria is often about half the
+        price of a similar restaurant dish, but the meat in it costs about the same, so it's about twice the share: 40%.
+        Groceries are nearly all meat.
       </p>
       <p class="small muted">
         This measures cost, not suffering. Cheap fixes like stunning fish and shrimp barely change the price, so their offsets
@@ -515,7 +516,7 @@
     { chicken: 3.7, turkey: 2.4, duck: 2.5, eggs: 3.9, pork: 2.7, veal: 2.0, beef: 1.55,        // v2: farm-direct prices
       lamb: 1.2, goat: 1.2, fish_farmed: 1.25, fish_wild: 1.1, shrimp: 1.2, other: 2.0 }
   ];
-  var SETTINGS_VERSION = 3;
+  var SETTINGS_VERSION = 4;
   var CONTEXTS = {
     restaurant: { label: "Restaurant", help: "{n}% of the price is meat" },
     cafeteria:  { label: "Cafeteria",  help: "{n}% of the price is meat" },
@@ -523,7 +524,7 @@
   };
   var DEFAULT_SETTINGS = {
     currency: "$",
-    shares: { restaurant: 20, cafeteria: 65, grocery: 100 },
+    shares: { restaurant: 20, cafeteria: 40, grocery: 100 },
     version: SETTINGS_VERSION,
     lastContext: "restaurant",
     lastMeat: "chicken",
@@ -555,6 +556,7 @@
       return Object.assign(clone(d), { multiplier: v });
     });
     if (legacy && savedVersion < 2 && s.shares.restaurant === 35) s.shares.restaurant = DEFAULT_SETTINGS.shares.restaurant;
+    if (legacy && savedVersion < 4 && s.shares.cafeteria === 65) s.shares.cafeteria = DEFAULT_SETTINGS.shares.cafeteria;
     s.version = SETTINGS_VERSION;
     return {
       entries: Array.isArray(data.entries) ? data.entries : [],
